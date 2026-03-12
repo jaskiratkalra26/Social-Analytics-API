@@ -1,0 +1,148 @@
+{
+    "video_path": "test_videos\\video_11.mp4",
+    "metadata": {
+        "video_name": "video_11.mp4",
+        "video_path": "test_videos\\video_11.mp4",
+        "fps": 24.0,
+        "total_frames": 1139,
+        "width": 1280,
+        "height": 720,
+        "duration": 47.458333333333336,
+        "file_size_bytes": 13183260,
+        "resolution": "1280x720",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 65,
+        "hook_category": "moderate",
+        "issues_detected": [
+            "weak or missing hook text",
+            "low audio energy in opening"
+        ],
+        "improvement_suggestions": [
+            "include a strong hook text overlay",
+            "start with engaging sound or voice"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 5.58,
+            "hook_text_ratio": 0.2,
+            "audio_energy": 0.07,
+            "speech_presence": true,
+            "scene_cuts_first_3s": 1
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "short",
+        "pace_category": "too_fast",
+        "pace_score": 61,
+        "cuts_per_minute": 26.55,
+        "avg_shot_duration": 2.26,
+        "shot_duration_variance": 2.02,
+        "motion_intensity": 7.08,
+        "text_overlay_ratio": 0.12
+    },
+    "lighting_analysis": {
+        "lighting_score": 80,
+        "lighting_category": "good",
+        "issues_detected": [
+            "Large shadow regions detected",
+            "Lighting flicker or inconsistent exposure"
+        ],
+        "improvement_suggestions": [
+            "Add fill light to reduce shadow areas",
+            "Use stable light sources and avoid mixed lighting"
+        ],
+        "lighting_metrics": {
+            "avg_brightness": 86.6,
+            "brightness_variance": 1042.77,
+            "contrast": 63.48,
+            "dark_pixel_ratio": 0.31,
+            "bright_pixel_ratio": 0.04
+        }
+    },
+    "text_analysis": {
+        "text_score": 70.0,
+        "text_category": "good",
+        "issues_detected": [
+            "OCR detected many unclear or fragmented words",
+            "Weak hook text presence in the opening frames"
+        ],
+        "improvement_suggestions": [
+            "Use simpler fonts and avoid decorative typography",
+            "Add a strong hook text in the first few seconds"
+        ],
+        "text_metrics": {
+            "text_presence_ratio": 0.125,
+            "text_density": 1.4375,
+            "font_size_score": 0.03399820963541667,
+            "context_clarity": 0.25,
+            "hook_text_ratio": 0.2,
+            "reading_speed": 20.0,
+            "motion_score": 0.0
+        }
+    },
+    "content_classification": {
+        "predicted_class": 9,
+        "predicted_label": "Sports",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "short",
+        "recommended_platform": "Instagram Reels",
+        "reason": "High visual quality and balanced pacing suit Instagram Reels",
+        "platform_scores": {
+            "tiktok": 10,
+            "instagram_reels": 60,
+            "youtube_shorts": 55
+        }
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#sports",
+            "usage": "50%"
+        },
+        {
+            "hashtag": "#football",
+            "usage": "10%"
+        },
+        {
+            "hashtag": "#sport",
+            "usage": "7%"
+        },
+        {
+            "hashtag": "#fitness",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#basketball",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#nfl",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#nba",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#soccer",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#baseball",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#gym",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "5PM - 9PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 67.5
+}

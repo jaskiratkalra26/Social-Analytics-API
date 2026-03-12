@@ -1,0 +1,138 @@
+{
+    "video_path": "test_videos\\video_07.mp4",
+    "metadata": {
+        "video_name": "video_07.mp4",
+        "video_path": "test_videos\\video_07.mp4",
+        "fps": 24.0,
+        "total_frames": 361,
+        "width": 1280,
+        "height": 720,
+        "duration": 15.041666666666666,
+        "file_size_bytes": 2252313,
+        "resolution": "1280x720",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 70,
+        "hook_category": "moderate",
+        "issues_detected": [
+            "opening scene remains static too long",
+            "low audio energy in opening"
+        ],
+        "improvement_suggestions": [
+            "introduce faster cuts or visual changes in the opening",
+            "start with engaging sound or voice"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 0.53,
+            "hook_text_ratio": 0.6,
+            "audio_energy": 0.01,
+            "speech_presence": true,
+            "scene_cuts_first_3s": 0
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "short",
+        "pace_category": "optimal",
+        "pace_score": 47,
+        "cuts_per_minute": 15.96,
+        "avg_shot_duration": 3.76,
+        "shot_duration_variance": 4.03,
+        "motion_intensity": 3.92,
+        "text_overlay_ratio": 0.67
+    },
+    "lighting_analysis": {
+        "lighting_score": 80,
+        "lighting_category": "good",
+        "issues_detected": [
+            "Overexposed highlights detected",
+            "Lighting flicker or inconsistent exposure"
+        ],
+        "improvement_suggestions": [
+            "Reduce direct lighting or lower camera exposure",
+            "Use stable light sources and avoid mixed lighting"
+        ],
+        "lighting_metrics": {
+            "avg_brightness": 175.74,
+            "brightness_variance": 4784.51,
+            "contrast": 32.29,
+            "dark_pixel_ratio": 0.04,
+            "bright_pixel_ratio": 0.46
+        }
+    },
+    "text_analysis": {
+        "text_score": 100.0,
+        "text_category": "excellent",
+        "issues_detected": [],
+        "improvement_suggestions": [],
+        "text_metrics": {
+            "text_presence_ratio": 0.6666666666666666,
+            "text_density": 14.5,
+            "font_size_score": 0.007094116210937499,
+            "context_clarity": 0.6875,
+            "hook_text_ratio": 0.6,
+            "reading_speed": 65.0,
+            "motion_score": 0.016231163699776226
+        }
+    },
+    "content_classification": {
+        "predicted_class": 7,
+        "predicted_label": "Music",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "short",
+        "recommended_platform": "Instagram Reels",
+        "reason": "High visual quality and balanced pacing suit Instagram Reels",
+        "platform_scores": {
+            "tiktok": 30,
+            "instagram_reels": 65,
+            "youtube_shorts": 35
+        }
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#music",
+            "usage": "54%"
+        },
+        {
+            "hashtag": "#love",
+            "usage": "7%"
+        },
+        {
+            "hashtag": "#hiphop",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#rap",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#musician",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#art",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#artist",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#musica",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#rock",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "6PM - 10PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 73.2
+}

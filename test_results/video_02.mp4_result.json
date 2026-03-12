@@ -1,0 +1,145 @@
+{
+    "video_path": "test_videos\\video_02.mp4",
+    "metadata": {
+        "video_name": "video_02.mp4",
+        "video_path": "test_videos\\video_02.mp4",
+        "fps": 24.0,
+        "total_frames": 15691,
+        "width": 1280,
+        "height": 720,
+        "duration": 653.7916666666666,
+        "file_size_bytes": 169612362,
+        "resolution": "1280x720",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 50,
+        "hook_category": "weak",
+        "issues_detected": [
+            "opening scene remains static too long",
+            "weak or missing hook text",
+            "low audio energy in opening"
+        ],
+        "improvement_suggestions": [
+            "introduce faster cuts or visual changes in the opening",
+            "include a strong hook text overlay",
+            "start with engaging sound or voice"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 1.99,
+            "hook_text_ratio": 0.0,
+            "audio_energy": 0.0,
+            "speech_presence": true,
+            "scene_cuts_first_3s": 0
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "long",
+        "pace_category": "too_fast",
+        "pace_score": 50,
+        "cuts_per_minute": 12.02,
+        "avg_shot_duration": 4.99,
+        "shot_duration_variance": 77.73,
+        "motion_intensity": 4.26,
+        "text_overlay_ratio": 0.19
+    },
+    "lighting_analysis": {
+        "lighting_score": 55,
+        "lighting_category": "needs_improvement",
+        "issues_detected": [
+            "Low lighting / underexposed video",
+            "Large shadow regions detected",
+            "Lighting flicker or inconsistent exposure"
+        ],
+        "improvement_suggestions": [
+            "Increase front lighting or record in a brighter environment",
+            "Add fill light to reduce shadow areas",
+            "Use stable light sources and avoid mixed lighting"
+        ],
+        "lighting_metrics": {
+            "avg_brightness": 46.89,
+            "brightness_variance": 1420.65,
+            "contrast": 39.83,
+            "dark_pixel_ratio": 0.52,
+            "bright_pixel_ratio": 0.02
+        }
+    },
+    "text_analysis": {
+        "text_score": 50.0,
+        "text_category": "needs_improvement",
+        "issues_detected": [
+            "Text too small to read on most screens",
+            "Text content changes too fast (697 WPM) to be easily read",
+            "Weak hook text presence in the opening frames"
+        ],
+        "improvement_suggestions": [
+            "Increase font size or enlarge text overlay",
+            "Increase duration of text overlays or reduce text amount per screen",
+            "Add a strong hook text in the first few seconds"
+        ],
+        "text_metrics": {
+            "text_presence_ratio": 0.1926605504587156,
+            "text_density": 98.34862385321101,
+            "font_size_score": 0.000775866848559932,
+            "context_clarity": 0.7203255708794936,
+            "hook_text_ratio": 0.0,
+            "reading_speed": 697.5757575757576,
+            "motion_score": 0.05621142221827393
+        }
+    },
+    "content_classification": {
+        "predicted_class": 7,
+        "predicted_label": "Music",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "long",
+        "recommended_platform": "YouTube",
+        "reason": "Long-form videos perform best on YouTube"
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#music",
+            "usage": "54%"
+        },
+        {
+            "hashtag": "#love",
+            "usage": "7%"
+        },
+        {
+            "hashtag": "#hiphop",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#rap",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#musician",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#art",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#artist",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#musica",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#rock",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "6PM - 10PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 50.8
+}

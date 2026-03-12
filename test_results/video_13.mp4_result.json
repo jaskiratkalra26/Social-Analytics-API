@@ -1,0 +1,144 @@
+{
+    "video_path": "test_videos\\video_13.mp4",
+    "metadata": {
+        "video_name": "video_13.mp4",
+        "video_path": "test_videos\\video_13.mp4",
+        "fps": 50.0,
+        "total_frames": 1078,
+        "width": 1920,
+        "height": 1080,
+        "duration": 21.56,
+        "file_size_bytes": 15947919,
+        "resolution": "1920x1080",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 40,
+        "hook_category": "weak",
+        "issues_detected": [
+            "opening scene remains static too long",
+            "weak or missing hook text",
+            "low audio energy in opening",
+            "no speech detected in opening hook"
+        ],
+        "improvement_suggestions": [
+            "introduce faster cuts or visual changes in the opening",
+            "include a strong hook text overlay",
+            "start with engaging sound or voice",
+            "consider starting with narration or voice introduction"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 4.68,
+            "hook_text_ratio": 0.2,
+            "audio_energy": 0.0,
+            "speech_presence": false,
+            "scene_cuts_first_3s": 0
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "short",
+        "pace_category": "slow",
+        "pace_score": 14,
+        "cuts_per_minute": 0.0,
+        "avg_shot_duration": 21.56,
+        "shot_duration_variance": 0.0,
+        "motion_intensity": 4.34,
+        "text_overlay_ratio": 0.12
+    },
+    "lighting_analysis": {
+        "lighting_score": 100,
+        "lighting_category": "excellent",
+        "issues_detected": [],
+        "improvement_suggestions": [],
+        "lighting_metrics": {
+            "avg_brightness": 116.03,
+            "brightness_variance": 23.61,
+            "contrast": 33.44,
+            "dark_pixel_ratio": 0.0,
+            "bright_pixel_ratio": 0.01
+        }
+    },
+    "text_analysis": {
+        "text_score": 45.0,
+        "text_category": "needs_improvement",
+        "issues_detected": [
+            "Text too small to read on most screens",
+            "OCR detected many unclear or fragmented words",
+            "Weak hook text presence in the opening frames"
+        ],
+        "improvement_suggestions": [
+            "Increase font size or enlarge text overlay",
+            "Use simpler fonts and avoid decorative typography",
+            "Add a strong hook text in the first few seconds"
+        ],
+        "text_metrics": {
+            "text_presence_ratio": 0.125,
+            "text_density": 0.875,
+            "font_size_score": 0.0029160236625514406,
+            "context_clarity": 0.3333333333333333,
+            "hook_text_ratio": 0.2,
+            "reading_speed": 40.0,
+            "motion_score": 0.0
+        }
+    },
+    "content_classification": {
+        "predicted_class": 7,
+        "predicted_label": "Music",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "short",
+        "recommended_platform": "Instagram Reels",
+        "reason": "High visual quality and balanced pacing suit Instagram Reels",
+        "platform_scores": {
+            "tiktok": 20,
+            "instagram_reels": 25,
+            "youtube_shorts": 0
+        }
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#music",
+            "usage": "54%"
+        },
+        {
+            "hashtag": "#love",
+            "usage": "7%"
+        },
+        {
+            "hashtag": "#hiphop",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#rap",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#musician",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#art",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#artist",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#musica",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#rock",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "6PM - 10PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 43.8
+}

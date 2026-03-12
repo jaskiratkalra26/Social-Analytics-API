@@ -1,0 +1,152 @@
+{
+    "video_path": "test_videos\\video_27.mp4",
+    "metadata": {
+        "video_name": "video_27.mp4",
+        "video_path": "test_videos\\video_27.mp4",
+        "fps": 29.97002997002997,
+        "total_frames": 619,
+        "width": 3840,
+        "height": 2160,
+        "duration": 20.653966666666665,
+        "file_size_bytes": 45009727,
+        "resolution": "3840x2160",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 40,
+        "hook_category": "weak",
+        "issues_detected": [
+            "opening scene remains static too long",
+            "weak or missing hook text",
+            "low audio energy in opening",
+            "no speech detected in opening hook"
+        ],
+        "improvement_suggestions": [
+            "introduce faster cuts or visual changes in the opening",
+            "include a strong hook text overlay",
+            "start with engaging sound or voice",
+            "consider starting with narration or voice introduction"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 3.02,
+            "hook_text_ratio": 0.0,
+            "audio_energy": 0.0,
+            "speech_presence": false,
+            "scene_cuts_first_3s": 0
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "short",
+        "pace_category": "slow",
+        "pace_score": 10,
+        "cuts_per_minute": 0.0,
+        "avg_shot_duration": 20.65,
+        "shot_duration_variance": 0.0,
+        "motion_intensity": 3.44,
+        "text_overlay_ratio": 0.0
+    },
+    "lighting_analysis": {
+        "lighting_score": 80,
+        "lighting_category": "good",
+        "issues_detected": [
+            "Overexposed highlights detected",
+            "Lighting flicker or inconsistent exposure"
+        ],
+        "improvement_suggestions": [
+            "Reduce direct lighting or lower camera exposure",
+            "Use stable light sources and avoid mixed lighting"
+        ],
+        "lighting_metrics": {
+            "avg_brightness": 167.33,
+            "brightness_variance": 623.33,
+            "contrast": 62.09,
+            "dark_pixel_ratio": 0.01,
+            "bright_pixel_ratio": 0.25
+        }
+    },
+    "text_analysis": {
+        "text_score": 50.0,
+        "text_category": "needs_improvement",
+        "issues_detected": [
+            "Very little to no text overlay detected",
+            "Weak hook text presence in the opening frames"
+        ],
+        "improvement_suggestions": [
+            "Consider adding captions or text overlays to improve engagement",
+            "Add a strong hook text in the first few seconds"
+        ],
+        "text_metrics": {
+            "text_presence_ratio": 0.0,
+            "text_density": 0.0,
+            "font_size_score": 0.0,
+            "context_clarity": 0.0,
+            "hook_text_ratio": 0.0,
+            "reading_speed": 0.0,
+            "motion_score": 0.0
+        }
+    },
+    "content_classification": {
+        "predicted_class": 11,
+        "predicted_label": "Travel",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "short",
+        "recommended_platform": "Instagram Reels",
+        "reason": "High visual quality and balanced pacing suit Instagram Reels",
+        "platform_scores": {
+            "tiktok": 20,
+            "instagram_reels": 25,
+            "youtube_shorts": 0
+        }
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#travel",
+            "usage": "42%"
+        },
+        {
+            "hashtag": "#travelphotography",
+            "usage": "9%"
+        },
+        {
+            "hashtag": "#photography",
+            "usage": "8%"
+        },
+        {
+            "hashtag": "#nature",
+            "usage": "8%"
+        },
+        {
+            "hashtag": "#love",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#travelgram",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#instagood",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#photooftheday",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#adventure",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#instagram",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "10AM - 2PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 41.0
+}

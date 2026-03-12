@@ -1,0 +1,138 @@
+{
+    "video_path": "test_videos\\video_05.mp4",
+    "metadata": {
+        "video_name": "video_05.mp4",
+        "video_path": "test_videos\\video_05.mp4",
+        "fps": 23.976023976023978,
+        "total_frames": 1440,
+        "width": 1280,
+        "height": 720,
+        "duration": 60.059999999999995,
+        "file_size_bytes": 12917485,
+        "resolution": "1280x720",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 85,
+        "hook_category": "strong",
+        "issues_detected": [
+            "low audio energy in opening"
+        ],
+        "improvement_suggestions": [
+            "start with engaging sound or voice"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 3.76,
+            "hook_text_ratio": 0.4,
+            "audio_energy": 0.02,
+            "speech_presence": true,
+            "scene_cuts_first_3s": 2
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "long",
+        "pace_category": "too_fast",
+        "pace_score": 64,
+        "cuts_per_minute": 41.96,
+        "avg_shot_duration": 1.43,
+        "shot_duration_variance": 1.41,
+        "motion_intensity": 6.59,
+        "text_overlay_ratio": 0.19
+    },
+    "lighting_analysis": {
+        "lighting_score": 90,
+        "lighting_category": "excellent",
+        "issues_detected": [
+            "Lighting flicker or inconsistent exposure"
+        ],
+        "improvement_suggestions": [
+            "Use stable light sources and avoid mixed lighting"
+        ],
+        "lighting_metrics": {
+            "avg_brightness": 119.89,
+            "brightness_variance": 2206.11,
+            "contrast": 46.4,
+            "dark_pixel_ratio": 0.03,
+            "bright_pixel_ratio": 0.11
+        }
+    },
+    "text_analysis": {
+        "text_score": 75.0,
+        "text_category": "good",
+        "issues_detected": [
+            "Text too small to read on most screens"
+        ],
+        "improvement_suggestions": [
+            "Increase font size or enlarge text overlay"
+        ],
+        "text_metrics": {
+            "text_presence_ratio": 0.19047619047619047,
+            "text_density": 4.142857142857143,
+            "font_size_score": 0.002103994864004629,
+            "context_clarity": 0.6666666666666666,
+            "hook_text_ratio": 0.4,
+            "reading_speed": 100.0,
+            "motion_score": 0.0
+        }
+    },
+    "content_classification": {
+        "predicted_class": 7,
+        "predicted_label": "Music",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "short",
+        "recommended_platform": "Instagram Reels",
+        "reason": "High visual quality and balanced pacing suit Instagram Reels",
+        "platform_scores": {
+            "tiktok": 30,
+            "instagram_reels": 80,
+            "youtube_shorts": 55
+        }
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#music",
+            "usage": "54%"
+        },
+        {
+            "hashtag": "#love",
+            "usage": "7%"
+        },
+        {
+            "hashtag": "#hiphop",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#rap",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#musician",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#art",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#artist",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#musica",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#rock",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "6PM - 10PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 78.0
+}

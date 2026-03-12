@@ -1,0 +1,148 @@
+{
+    "video_path": "test_videos\\video_04.mp4",
+    "metadata": {
+        "video_name": "video_04.mp4",
+        "video_path": "test_videos\\video_04.mp4",
+        "fps": 24.0,
+        "total_frames": 361,
+        "width": 1280,
+        "height": 720,
+        "duration": 15.041666666666666,
+        "file_size_bytes": 2299653,
+        "resolution": "1280x720",
+        "aspect_ratio": 1.7777777777777777
+    },
+    "hook_analysis": {
+        "hook_score": 70,
+        "hook_category": "moderate",
+        "issues_detected": [
+            "opening scene remains static too long",
+            "low audio energy in opening"
+        ],
+        "improvement_suggestions": [
+            "introduce faster cuts or visual changes in the opening",
+            "start with engaging sound or voice"
+        ],
+        "hook_metrics": {
+            "motion_intensity": 0.38,
+            "hook_text_ratio": 0.6,
+            "audio_energy": 0.01,
+            "speech_presence": true,
+            "scene_cuts_first_3s": 0
+        }
+    },
+    "pacing_analysis": {
+        "video_type": "short",
+        "pace_category": "optimal",
+        "pace_score": 44,
+        "cuts_per_minute": 15.96,
+        "avg_shot_duration": 3.76,
+        "shot_duration_variance": 3.73,
+        "motion_intensity": 3.12,
+        "text_overlay_ratio": 0.67
+    },
+    "lighting_analysis": {
+        "lighting_score": 70,
+        "lighting_category": "good",
+        "issues_detected": [
+            "Large shadow regions detected",
+            "Overexposed highlights detected",
+            "Lighting flicker or inconsistent exposure"
+        ],
+        "improvement_suggestions": [
+            "Add fill light to reduce shadow areas",
+            "Reduce direct lighting or lower camera exposure",
+            "Use stable light sources and avoid mixed lighting"
+        ],
+        "lighting_metrics": {
+            "avg_brightness": 134.84,
+            "brightness_variance": 9347.5,
+            "contrast": 29.72,
+            "dark_pixel_ratio": 0.27,
+            "bright_pixel_ratio": 0.38
+        }
+    },
+    "text_analysis": {
+        "text_score": 75.0,
+        "text_category": "good",
+        "issues_detected": [
+            "Text too small to read on most screens"
+        ],
+        "improvement_suggestions": [
+            "Increase font size or enlarge text overlay"
+        ],
+        "text_metrics": {
+            "text_presence_ratio": 0.6666666666666666,
+            "text_density": 16.166666666666668,
+            "font_size_score": 0.00486194577991453,
+            "context_clarity": 0.9230769230769231,
+            "hook_text_ratio": 0.6,
+            "reading_speed": 60.0,
+            "motion_score": 0.0
+        }
+    },
+    "content_classification": {
+        "predicted_class": 10,
+        "predicted_label": "Technology",
+        "embedding_shape": [
+            512
+        ]
+    },
+    "platform_recommendation": {
+        "video_type": "short",
+        "recommended_platform": "Instagram Reels",
+        "reason": "High visual quality and balanced pacing suit Instagram Reels",
+        "platform_scores": {
+            "tiktok": 30,
+            "instagram_reels": 40,
+            "youtube_shorts": 35
+        }
+    },
+    "popular_hashtags": [
+        {
+            "hashtag": "#technology",
+            "usage": "52%"
+        },
+        {
+            "hashtag": "#tech",
+            "usage": "14%"
+        },
+        {
+            "hashtag": "#innovation",
+            "usage": "6%"
+        },
+        {
+            "hashtag": "#business",
+            "usage": "5%"
+        },
+        {
+            "hashtag": "#iphone",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#engineering",
+            "usage": "4%"
+        },
+        {
+            "hashtag": "#technews",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#science",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#software",
+            "usage": "3%"
+        },
+        {
+            "hashtag": "#gadgets",
+            "usage": "3%"
+        }
+    ],
+    "upload_schedule": {
+        "best_time": "6PM - 9PM",
+        "timezone": "User Local Time"
+    },
+    "viral_score": 64.8
+}
