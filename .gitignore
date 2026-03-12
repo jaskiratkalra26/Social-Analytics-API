@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+
+# Project Specific - Generated files and folders
+output/
+temp_uploads/
+
+# Logs
+*.log
+
+# Large binary files (add or remove as needed)
+*.mp4
+*.avi
+*.mov

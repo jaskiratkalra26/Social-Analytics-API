@@ -1,0 +1,15 @@
+opencv-python
+scenedetect[opencv]
+moviepy
+numpy<2.0
+pytesseract
+librosa
+lightgbm
+scikit-learn
+joblib
+transformers
+torch
+Pillow
+fastapi
+uvicorn
+python-multipart

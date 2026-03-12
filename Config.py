@@ -1,0 +1,198 @@
+import os
+
+# Project Root
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Output Directories
+OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
+METADATA_OUTPUT_DIR = os.path.join(OUTPUT_DIR, 'metadata')
+FRAMES_OUTPUT_DIR = os.path.join(OUTPUT_DIR, 'frames')
+AUDIO_OUTPUT_DIR = os.path.join(OUTPUT_DIR, 'audio')
+AUDIO_CODEC = 'pcm_s16le'
+
+# Scene Detection
+SCENE_THRESHOLD = 30.0
+SCENE_DOWNSCALE_FACTOR = 1
+SCENE_SHOW_PROGRESS = False
+
+# Frame Extraction
+TARGET_FPS = 1
+OCR_SAMPLE_RATE = 3  # Process every 3rd captured frame for speed
+
+# Tesseract
+# Set this to your tesseract executable path if not in PATH
+# e.g. r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+TESSERACT_CMD = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# Pacing Analysis
+PACING_SHORT_VIDEO_THRESHOLD = 60
+
+# Short Video Pacing Thresholds (Cuts per Minute)
+PACING_SHORT_MIN_CUTS = 8
+PACING_SHORT_MAX_CUTS = 25
+
+# Long Video Pacing Thresholds (Cuts per Minute)
+PACING_LONG_MIN_CUTS = 2
+PACING_LONG_MAX_CUTS = 10
+
+# Pacing Score Normalization (approx max values)
+PACING_NORM_CUTS = 30.0
+PACING_NORM_MOTION = 10.0
+PACING_NORM_VARIANCE = 10.0
+
+# Pacing Score Weights
+PACING_WEIGHT_CUTS = 0.4
+PACING_WEIGHT_MOTION = 0.3
+PACING_WEIGHT_VARIANCE = 0.2
+PACING_WEIGHT_TEXT = 0.1
+
+# Lighting Analysis
+LIGHTING_SAMPLE_COUNT = 15  # Target number of frames to sample
+
+# Hook Analysis Configuration
+HOOK_DURATION = 3
+HOOK_MIN_MOTION = 0.3
+HOOK_MIN_TEXT_RATIO = 0.3
+HOOK_MIN_AUDIO_ENERGY = 0.1
+
+# Hook Penalties
+HOOK_PENALTY_LOW_MOTION = 20
+HOOK_PENALTY_STATIC_SCENE = 15
+HOOK_PENALTY_WEAK_TEXT = 20
+HOOK_PENALTY_LOW_AUDIO = 15
+HOOK_PENALTY_NO_SPEECH = 10
+
+# Hook Score Categories
+HOOK_SCORE_STRONG = 80
+HOOK_SCORE_MODERATE = 60
+HOOK_SCORE_WEAK = 40
+
+# Lighting Thresholds
+LIGHTING_LOW_BRIGHTNESS = 60.0
+LIGHTING_HIGH_BRIGHTNESS = 180.0
+LIGHTING_OVEREXPOSED_THRESHOLD = 200.0
+
+LIGHTING_CONTRAST_LOW = 25.0
+LIGHTING_CONTRAST_HIGH = 90.0
+
+LIGHTING_DARK_PIXEL_THRESH = 30
+LIGHTING_DARK_RATIO_MAX = 0.20
+
+LIGHTING_BRIGHT_PIXEL_THRESH = 225
+LIGHTING_BRIGHT_RATIO_MAX = 0.15
+
+LIGHTING_VARIANCE_THRESHOLD = 50.0
+
+# Lighting Categorization
+LIGHTING_SCORE_EXCELLENT = 80
+LIGHTING_SCORE_GOOD = 60
+LIGHTING_SCORE_POOR = 40
+
+# Text Overlay Analysis - Thresholds
+TEXT_PRESENCE_LOW = 0.05
+TEXT_PRESENCE_HIGH = 0.80
+
+TEXT_DENSITY_HIGH = 120
+
+FONT_SIZE_LOW = 0.005
+FONT_SIZE_GOOD_MIN = 0.005
+FONT_SIZE_GOOD_MAX = 0.03
+FONT_SIZE_HIGH = 0.08
+
+CONTEXT_CLARITY_LOW = 0.4
+CONTEXT_CLARITY_HIGH = 0.7
+
+HOOK_TEXT_RATIO_LOW = 0.3
+HOOK_TEXT_RATIO_HIGH = 0.5
+
+# Text Overlay Analysis - Penalties
+TEXT_PENALTY_SMALL_FONT = 25
+TEXT_PENALTY_LOW_CLARITY = 20
+TEXT_PENALTY_HIGH_DENSITY = 15
+TEXT_PENALTY_LOW_PRESENCE = 10
+TEXT_PENALTY_HIGH_PRESENCE = 10
+TEXT_PENALTY_WEAK_HOOK = 10
+
+# Text Overlay Analysis - Categories
+TEXT_SCORE_EXCELLENT = 80
+TEXT_SCORE_GOOD = 60
+TEXT_SCORE_POOR = 40
+
+# Text Reading Speed (Words Per Minute)
+READING_SPEED_IDEAL = 130
+READING_SPEED_HIGH = 150
+TEXT_PENALTY_FAST_TEXT = 15
+
+# Text Motion Score (0.0 - 1.0 Normalized movement per second)
+# 0.2 - 0.5 is normal reading speed for scrolling
+MOTION_SCORE_HIGH = 0.5
+MOTION_SCORE_EXCESSIVE = 0.8
+TEXT_PENALTY_FAST_SCROLL = 15
+
+
+ 
+
+# Platform Recommendation - Thresholds & Scores
+
+# General Video Type
+VIDEO_TYPE_SHORT_THRESHOLD = 90
+
+# TikTok Recommendation Logic
+TIKTOK_HOOK_THRESHOLD = 70
+TIKTOK_HOOK_BONUS = 30
+
+TIKTOK_PACING_THRESHOLD = 70
+TIKTOK_PACING_BONUS = 25
+
+TIKTOK_DURATION_THRESHOLD_LOW = 30
+TIKTOK_DURATION_BONUS = 20
+
+TIKTOK_TEXT_THRESHOLD = 60
+TIKTOK_TEXT_BONUS = 10
+
+TIKTOK_PENALTY_THRESHOLD = 60
+TIKTOK_PENALTY_VALUE = 10
+
+# Instagram Reels Recommendation Logic
+REELS_LIGHTING_THRESHOLD = 75
+REELS_LIGHTING_BONUS = 25
+
+REELS_TEXT_THRESHOLD = 70
+REELS_TEXT_BONUS = 20
+
+REELS_HOOK_THRESHOLD = 60
+REELS_HOOK_BONUS = 20
+
+REELS_PACING_RANGE_MIN = 50
+REELS_PACING_RANGE_MAX = 70
+REELS_PACING_BONUS = 15
+
+# YouTube Shorts Recommendation Logic
+SHORTS_DURATION_THRESHOLD = 30
+SHORTS_DURATION_BONUS = 20
+
+SHORTS_HOOK_THRESHOLD = 60
+SHORTS_HOOK_BONUS = 20
+
+SHORTS_TEXT_THRESHOLD = 60
+SHORTS_TEXT_BONUS = 15
+
+SHORTS_NICHE_EDUCATION_BONUS = 20
+
+# Upload Time Recommendations (Category-Specific)
+CATEGORY_UPLOAD_TIME = {
+    "beauty": "6PM - 9PM",
+    "comedy": "7PM - 11PM",
+    "cooking": "11AM - 2PM",
+    "education": "3PM - 6PM",
+    "finance": "7AM - 9AM or 6PM - 8PM",
+    "fitness": "6AM - 9AM",
+    "gaming": "5PM - 9PM",
+    "music": "6PM - 10PM",
+    "news": "7AM - 9AM",
+    "sports": "5PM - 9PM",
+    "technology": "6PM - 9PM",
+    "travel": "10AM - 2PM"
+}
+
+
