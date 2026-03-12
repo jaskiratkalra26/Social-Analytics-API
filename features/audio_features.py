@@ -23,7 +23,19 @@ def extract_audio_features(audio_path):
     try:
         # Load audio file
         # sr=None ensures we keep original sampling rate, usually 44.1kHz or 16kHz
-        y, sr = librosa.load(audio_path, sr=None)
+        # FIX: Explicitly handle mono conversion to avoid numpy incompatibility with librosa
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore') # Ignore numpy future warnings
+            try:
+                # Try standard loading first
+                y, sr = librosa.load(audio_path, sr=None)
+            except Exception as librosa_err:
+                print(f"Standard librosa load failed, trying robust load: {librosa_err}")
+                # Fallback: Load multi-channel and average manually
+                y, sr = librosa.load(audio_path, sr=None, mono=False)
+                if y.ndim > 1:
+                    y = np.mean(y, axis=0) # Average channels to mono
         
         # Check if audio is empty
         if len(y) == 0:
