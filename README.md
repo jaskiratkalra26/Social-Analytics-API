@@ -41,9 +41,6 @@ Social Analytics API/
 ## 🛠️ Prerequisites
 
 *   **Python 3.8+**
-*   **Tesseract OCR**: Required for text extraction.
-    *   **Windows**: Download and install from [UB-Mannheim](https://github.com/UB-Mannheim/tesseract/wiki). Ensure the path is correctly set in `Config.py`.
-    *   **Linux/Mac**: Install via package manager (`sudo apt install tesseract-ocr` or `brew install tesseract`).
 
 ## 📦 Installation
 
@@ -95,6 +92,7 @@ You can adjust analysis parameters in `Config.py`:
 -   **`SCENE_THRESHOLD`**: Sensitivity for scene detection.
 -   **`TARGET_FPS`**: Frame rate for sampling (default: 1 FPS for speed).
 -   **`TESSERACT_CMD`**: Path to the Tesseract executable (e.g., `r"C:\Program Files\Tesseract-OCR\tesseract.exe"`).
+
 
 
 
