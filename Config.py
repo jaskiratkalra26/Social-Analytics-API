@@ -20,19 +20,6 @@ TARGET_FPS = 1
 FRAME_MAX_WIDTH = 640  # Resize frames to this width for speed
 OCR_SAMPLE_RATE = 3  # Process every 3rd captured frame for speed
 
-# Tesseract
-# Set this to your tesseract executable path if not in PATH
-# e.g. r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-# In Docker, we want this to be None so it uses the system PATH
-if os.name == 'nt':
-    TESSERACT_CMD = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-else:
-    TESSERACT_CMD = None
-
-# Allow override via environment variable
-if os.getenv('TESSERACT_CMD'):
-    TESSERACT_CMD = os.getenv('TESSERACT_CMD')
-
 # Pacing Analysis
 PACING_SHORT_VIDEO_THRESHOLD = 60
 
