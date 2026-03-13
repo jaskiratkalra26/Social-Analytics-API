@@ -3,6 +3,7 @@ import sys
 import json
 import logging
 import time
+import concurrent.futures
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
@@ -46,78 +47,94 @@ def analyze_video(video_path: str) -> dict:
         "popular_hashtags": []
     }
     
-    # 1. Metadata
-    try:
-        meta_json = video_loader.load_video_metadata(video_path)
-        if meta_json:
-            results["metadata"] = json.loads(meta_json)
-    except Exception as e:
-        logger.error(f"Metadata error: {e}")
-
-    # 2. Frame Extraction (Centralized)
-    # Extract at TARGET_FPS (e.g. 1 FPS is usually enough for general analysis, maybe 2 for better pacing/hook)
-    extract_fps = getattr(Config, 'TARGET_FPS', 1)
-    logger.info(f"Extracting frames at {extract_fps} FPS...")
-    try:
-        frame_folder = frame_extractor.extract_frames(video_path, fps_sampling=extract_fps)
-        logger.info(f"Frames extracted to: {frame_folder}")
-    except Exception as e:
-        logger.error(f"Frame extraction error: {e}")
-        return {"error": "Frame extraction failed"}
-
-    # 3. Audio Extraction (Centralized)
-    logger.info("Extracting audio...")
-    try:
-        # returns path or None
-        audio_path = audio_extractor.extract_audio(video_path)
-        if audio_path:
-             logger.info(f"Audio extracted to: {audio_path}")
-    except Exception as e:
-        logger.error(f"Audio extraction error: {e}")
-
-    # 4. Run Analysis Modules
+    # --- STAGE 1: Extraction & Metadata (Parallel) ---
+    logger.info("Starting extraction phase...")
     
-    # Hook Analysis
-    logger.info("Running Hook Analysis...")
-    try:
-        results["hook_analysis"] = hook_analysis.analyze_hook(video_path, frame_folder)
-    except Exception as e:
-        logger.error(f"Hook analysis error: {e}")
-        results["hook_analysis"] = {"error": str(e)}
+    frame_folder = None
+    frames_list = [] # List to hold in-memory frames
+    audio_path = None
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        # Define tasks
+        future_meta = executor.submit(video_loader.load_video_metadata, video_path)
+        
+        extract_fps = getattr(Config, 'TARGET_FPS', 1)
+        # Note: We rely on frame_extractor returning (path, list) now
+        future_frames = executor.submit(frame_extractor.extract_frames, video_path, fps_sampling=extract_fps)
+        
+        future_audio = executor.submit(audio_extractor.extract_audio, video_path)
+        
+        # Wait for results
+        try:
+            meta_json = future_meta.result()
+            if meta_json:
+                results["metadata"] = json.loads(meta_json)
+        except Exception as e:
+            logger.error(f"Metadata error: {e}")
 
-    # Pacing Analysis
-    logger.info("Running Pacing Analysis...")
-    try:
-        results["pacing_analysis"] = pacing_analysis.analyze_pacing(video_path, frame_folder=frame_folder)
-    except Exception as e:
-        logger.error(f"Pacing analysis error: {e}")
-        results["pacing_analysis"] = {"error": str(e)}
+        try:
+            # Unpack the tuple (folder, list)
+            result = future_frames.result()
+            if isinstance(result, tuple) and len(result) == 2:
+                frame_folder, frames_list = result
+            else:
+                frame_folder = result # Fallback if someone reverted the change
+                frames_list = [] # No memory optimization
+                
+            logger.info(f"Frames extracted to: {frame_folder} (Count: {len(frames_list)})")
+        except Exception as e:
+            logger.error(f"Frame extraction error: {e}")
+            return {"error": "Frame extraction failed"}
 
-    # Lighting Analysis
-    logger.info("Running Lighting Analysis...")
-    try:
-        # Lighting analysis normally downsamples, but passing full folder is safer than extracting again 
-        # and overwriting if we just accept it might process more frames.
-        results["lighting_analysis"] = lighting_analysis.analyze_lighting(video_path, frame_folder=frame_folder)
-    except Exception as e:
-        logger.error(f"Lighting analysis error: {e}")
-        results["lighting_analysis"] = {"error": str(e)}
+        try:
+            audio_path = future_audio.result()
+            if audio_path:
+                 logger.info(f"Audio extracted to: {audio_path}")
+        except Exception as e:
+            logger.error(f"Audio extraction error: {e}")
 
-    # Text Overlay Analysis
-    logger.info("Running Text Overlay Analysis...")
-    try:
-        results["text_analysis"] = text_overlay_analysis.analyze_text_overlay(frame_folder)
-    except Exception as e:
-        logger.error(f"Text analysis error: {e}")
-        results["text_analysis"] = {"error": str(e)}
+    # --- STAGE 2: Analysis Modules (Parallel) ---
+    logger.info("Starting analysis phase...")
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        # Pass frames_list to all functions
+        future_hook = executor.submit(hook_analysis.analyze_hook, video_path, frame_folder, frames=frames_list)
+        future_pacing = executor.submit(pacing_analysis.analyze_pacing, video_path, frame_folder=frame_folder, frames=frames_list)
+        future_lighting = executor.submit(lighting_analysis.analyze_lighting, video_path, frame_folder=frame_folder, frames=frames_list)
+        future_text = executor.submit(text_overlay_analysis.analyze_text_overlay, frame_folder, frames=frames_list)
+        future_clip = executor.submit(clip_analysis.analyze_content, video_path, frame_folder, frames=frames_list)
+        
+        # Collect results as they complete
 
-    # Content Classification
-    logger.info("Running Content Classification (CLIP+LightGBM)...")
-    try:
-        results["content_classification"] = clip_analysis.analyze_content(video_path, frame_folder)
-    except Exception as e:
-        logger.error(f"Content classification error: {e}")
-        results["content_classification"] = {"error": str(e)}
+        try:
+            results["hook_analysis"] = future_hook.result()
+        except Exception as e:
+            logger.error(f"Hook analysis error: {e}")
+            results["hook_analysis"] = {"error": str(e)}
+            
+        try:
+            results["pacing_analysis"] = future_pacing.result()
+        except Exception as e:
+            logger.error(f"Pacing analysis error: {e}")
+            results["pacing_analysis"] = {"error": str(e)}
+
+        try:
+            results["lighting_analysis"] = future_lighting.result()
+        except Exception as e:
+            logger.error(f"Lighting analysis error: {e}")
+            results["lighting_analysis"] = {"error": str(e)}
+
+        try:
+            results["text_analysis"] = future_text.result()
+        except Exception as e:
+            logger.error(f"Text analysis error: {e}")
+            results["text_analysis"] = {"error": str(e)}
+
+        try:
+            results["content_classification"] = future_clip.result()
+        except Exception as e:
+            logger.error(f"Content classification error: {e}")
+            results["content_classification"] = {"error": str(e)}
 
     # Platform Recommendation & Hashtags
     logger.info("Running Platform Recommendation & Hashtag Generation...")

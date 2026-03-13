@@ -70,18 +70,64 @@ def scene_features(scene_list):
         "pace_variance": float(pace_variance)
     }
 
-def motion_features(frame_folder, max_frames=None):
+def motion_features(frame_folder, max_frames=None, frames=None):
     """
     Estimates motion intensity using optical flow.
     
     Args:
         frame_folder: Path to folder containing extracted frames
         max_frames: Optional int, max number of frames to process from start
+        frames: Optional list of numpy.ndarray frames. If provided, skips loading from disk.
         
     Returns:
         Dictionary with key:
         - motion_intensity: Mean magnitude of motion vectors
     """
+    if frames is not None and len(frames) > 0:
+        # Use provided memory frames
+        if max_frames and max_frames > 0:
+            processing_frames = frames[:max_frames]
+        else:
+            processing_frames = frames
+            
+        if len(processing_frames) < 2:
+            return {"motion_intensity": 0.0}
+            
+        magnitudes = []
+        prev_frame = processing_frames[0]
+        prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+        
+        for i in range(1, len(processing_frames)):
+            curr_frame = processing_frames[i]
+            # Resize for speed (e.g. to 320 width)
+            h, w = curr_frame.shape[:2]
+            if w > 320:
+                scale = 320 / w
+                new_h = int(h * scale)
+                # Note: This modifies the frame for calculation only, 
+                # be careful not to modify the shared frame object if it matters elsewhere.
+                # cv2.resize returns a new image, so it's safe.
+                curr_frame_resized = cv2.resize(curr_frame, (320, new_h))
+                if i == 1:
+                     prev_frame_resized = cv2.resize(prev_frame, (320, new_h))
+                     prev_gray = cv2.cvtColor(prev_frame_resized, cv2.COLOR_BGR2GRAY)
+                curr_gray = cv2.cvtColor(curr_frame_resized, cv2.COLOR_BGR2GRAY)
+            else:
+                curr_gray = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2GRAY)
+
+            flow = cv2.calcOpticalFlowFarneback(
+                prev_gray, curr_gray, None, 
+                pyr_scale=0.5, levels=3, winsize=15, 
+                iterations=3, poly_n=5, poly_sigma=1.2, flags=0
+            )
+            magnitude, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+            magnitudes.append(np.mean(magnitude))
+            prev_gray = curr_gray
+            
+        motion_intensity = np.mean(magnitudes) if magnitudes else 0.0
+        return {"motion_intensity": float(motion_intensity)}
+
+    # Fallback to loading from disk
     files = get_sorted_frame_paths(frame_folder)
     
     if max_frames and max_frames > 0:

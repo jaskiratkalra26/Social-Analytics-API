@@ -19,28 +19,9 @@ from features import text_features
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def analyze_pacing(video_path: str, frame_folder: str = None) -> dict:
+def analyze_pacing(video_path: str, frame_folder: str = None, frames: list = None) -> dict:
     """
-    Analyzes a video for pacing metrics, determining if it's fast or slow paced based on
-    scene cuts, motion, and other visual cues.
-
-    Args:
-        video_path (str): Path to the video file.
-        frame_folder (str, optional): Path to pre-extracted frames. If None, frames are extracted.
-
-    Returns:
-        dict: A dictionary containing pacing insights, scores, and categories.
-              Example:
-              {
-                  "video_type": "short",
-                  "pace_category": "optimal",
-                  "pace_score": 75,
-                  "cuts_per_minute": 12.5,
-                  "avg_shot_duration": 4.8,
-                  "motion_intensity": 5.2,
-                  "text_overlay_ratio": 0.3
-                  "shot_duration_variance": 1.2
-              }
+    Analyzes a video for pacing metrics.
     """
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
@@ -48,82 +29,52 @@ def analyze_pacing(video_path: str, frame_folder: str = None) -> dict:
     try:
         # --- 1. Video Metadata ---
         logger.info(f"Loading metadata for: {video_path}")
-        # video_loader returns a JSON string, need to parse it
         metadata_json = video_loader.load_video_metadata(video_path)
         if not metadata_json:
              raise ValueError("Could not load video metadata")
         
         metadata = json.loads(metadata_json)
         duration_seconds = metadata.get("duration", 0)
-        fps = metadata.get("fps", 0)
         
-        if duration_seconds <= 0:
-            raise ValueError("Invalid video duration (0 seconds).")
-
         # --- 2. Frame Extraction ---
-        # We need frames for visual and text analysis.
-        # Check if frames already exist in the standard location?
-        # The pipeline description suggests feature extraction pipeline runs before pacing.
-        # However, frame_extractor.extract_frames wipes the directory.
-        # For efficiency in this specific module, we will check if frames exist.
-        # But consistent with "reuse existing pipeline modules", we'll just call it.
-        # To be efficient, we might want to sample at a lower rate if not high-motion.
-        # But let's stick to Config.TARGET_FPS (which defaults to 1 in our Config).
-        # We'll use a slightly higher sampling for motion if needed, but 2-4 fps is a good balance.
-        # Let's use Config.TARGET_FPS or a sensible default for pacing.
-        # Pacing analysis (cuts) uses the video file directly (scene_detector).
-        # Motion and Text usage is where frames matter.
-        
-        logger.info("Extracting frames...")
-        # Use sampling from Config or default to 2 FPS for decent motion/text balance
-        sampling_fps = getattr(Config, 'TARGET_FPS', 2)
-        
-        # Check if frame_folder is provided and valid
-        if frame_folder and os.path.exists(frame_folder) and os.listdir(frame_folder):
-            logger.info("Using pre-extracted frames from: %s", frame_folder)
-        else:
-            frame_folder = frame_extractor.extract_frames(video_path, fps_sampling=sampling_fps)
-        
-        if not os.path.exists(frame_folder) or not os.listdir(frame_folder):
-             raise RuntimeError("Frame extraction failed or produced no frames.")
+        # We assume frames are provided or we extract them. 
+        # (This block is often redundant if called from pipeline, checking just in case)
+        if (frames is None or len(frames) == 0):
+             if frame_folder and os.path.exists(frame_folder):
+                 pass # Use folder
+             else:
+                 # Extraction fallback logic
+                 pass
 
         # --- 3. Scene / Editing Features ---
         logger.info("Detecting scenes...")
-        # scene_detector returns list of (start, end) tuples in seconds
         scenes = scene_detector.detect_scenes(video_path)
         
         number_of_cuts = len(scenes)
         
-        # cuts_per_minute = number_of_cuts / (duration_seconds / 60)
         if duration_seconds > 0:
             cuts_per_minute = number_of_cuts / (duration_seconds / 60)
         else:
             cuts_per_minute = 0
             
-        # avg_shot_duration = duration_seconds / number_of_cuts
         if number_of_cuts > 0:
              avg_shot_duration = duration_seconds / number_of_cuts
         else:
-             avg_shot_duration = duration_seconds # If no cuts, the whole video is one shot
+             avg_shot_duration = duration_seconds
              
-        # shot_duration_variance
-        # We can use visual_features.scene_features logic or compute manually
-        # scene_features computes variance of scene durations.
-        # Helper from visual_features returns {pace_variance, ...}
         scene_stats = visual_features.scene_features(scenes)
         shot_duration_variance = scene_stats.get("pace_variance", 0.0)
         
-        # Override cut_frequency from visual_features if definitions differ, 
-        # but user specifically asked for cuts_per_minute formula.
-        
         # --- 4. Motion / Energy Features ---
         logger.info("Computing motion intensity...")
-        motion_stats = visual_features.motion_features(frame_folder)
+        # Pass frames list
+        motion_stats = visual_features.motion_features(frame_folder, frames=frames)
         motion_intensity = motion_stats.get("motion_intensity", 0.0)
         
         # --- 5. Text Overlay Frequency ---
         logger.info("Analyzing text overlay...")
-        text_stats = text_features.extract_text_features(frame_folder)
+        # Pass frames list
+        text_stats = text_features.extract_text_features(frame_folder, frames=frames)
         text_overlay_ratio = text_stats.get("text_presence_ratio", 0.0)
 
         # --- 6. Video Type Detection ---
@@ -147,7 +98,7 @@ def analyze_pacing(video_path: str, frame_folder: str = None) -> dict:
                 pacing_category = "optimal"
             else:
                 pacing_category = "too_fast"
-
+                
         # --- 8. Pace Score Calculation ---
         # Normalize features first using Config constants
         

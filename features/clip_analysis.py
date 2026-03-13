@@ -3,11 +3,14 @@ import sys
 import json
 import logging
 import joblib
+import glob
 import lightgbm  # Explicit import for unpickling
 import cv2
 import numpy as np
-from sklearn.preprocessing import normalize
-from PIL import Image
+import warnings
+
+# Suppress sklearn warnings about feature names
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -62,7 +65,17 @@ def get_embedder():
             logger.error(f"Failed to initialize CLIP Embedder: {e}")
     return _embedder
 
-def analyze_content(video_path, frame_folder):
+def preload_models():
+    """
+    Explicitly loads models into memory.
+    Call this on application startup to avoid latency on first request.
+    """
+    logger.info("Preloading models...")
+    get_model()
+    get_embedder()
+    logger.info("Models preloaded successfully.")
+
+def analyze_content(video_path: str, frame_folder: str, frames: list = None):
     """
     Analyzes video content using CLIP embeddings and LightGBM model.
     Generates embedding from frames, normalizes it, and predicts class label.
@@ -93,109 +106,93 @@ def analyze_content(video_path, frame_folder):
     if embedder is None:
         return {"error": "CLIP Embedder failed to initialize"}
 
-    # 3. Load frames directly from video (Sampling: Every 12th frame)
-    # The original model was trained on every 12th frame, so we replicate this sampling.
-    frames = list()
-    SAMPLING_INTERVAL = 12
+    # 3. Load frames 
+    processing_frames = list()
     RESIZE_DIM = (224, 224) # Resize early to save memory
     
-    logger.info(f"Extracting frames from video (every {SAMPLING_INTERVAL}th frame)...")
-    try:
-        cap = cv2.VideoCapture(video_path)
-        if not cap.isOpened():
-             return {"error": "Could not open video for CLIP analysis"}
-        
-        frame_idx = 0
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        
-        # Limit processing to first 120 seconds for niche analysis
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        MAX_ANALYSIS_SECONDS = 120
-        max_frame_limit = int(fps * MAX_ANALYSIS_SECONDS) if fps > 0 else total_frames
-        
-        while True:
-            # Check duration limit
-            if frame_idx > max_frame_limit:
-                 logger.info(f"Reached {MAX_ANALYSIS_SECONDS}s limit ({frame_idx} frames) for niche analysis.")
-                 break
-
-            # We can optimize by grabbing frames and only retrieving (decoding) the 12th one.
-            # ret = cap.grab()
-            # if not ret: break
-            # if frame_idx % SAMPLING_INTERVAL == 0:
-            #     _, frame = cap.retrieve()
-            #     ...
-            # But grab() + retrieve() vs read() depends on codec.
-            # For simplicity and reliability with most codecs, we use read() with conditional processing.
-            
-            ret, frame = cap.read()
-            if not ret:
-                break
-                
-            if frame_idx % SAMPLING_INTERVAL == 0:
-                # Resize to target dimension (e.g., 224x224) to save memory before accumulating
-                # CLIP uses 224x224 but processor handles it. We resize for RAM efficiency.
+    # OPTIMIZATION: Use memory frames if available
+    if frames is not None and len(frames) > 0:
+        logger.info(f"Using {len(frames)} in-memory frames for CLIP analysis...")
+        for img in frames:
+            try:
+                frame_resized = cv2.resize(img, RESIZE_DIM, interpolation=cv2.INTER_AREA)
+                img_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
+                processing_frames.append(img_rgb)
+            except Exception:
+                pass
+    elif frame_folder and os.path.exists(frame_folder):
+        jpg_files = sorted(glob.glob(os.path.join(frame_folder, "*.jpg")))
+        if jpg_files:
+            logger.info(f"Using {len(jpg_files)} pre-extracted frames from disk for CLIP analysis...")
+            for fpath in jpg_files:
                 try:
-                    frame_resized = cv2.resize(frame, RESIZE_DIM, interpolation=cv2.INTER_AREA)
-                    # Convert BGR to RGB
-                    img_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
-                    frames.append(img_rgb)
-                except Exception as resize_err:
-                     logger.warning(f"Failed to process frame {frame_idx}: {resize_err}")
+                    img = cv2.imread(fpath)
+                    if img is not None:
+                        frame_resized = cv2.resize(img, RESIZE_DIM, interpolation=cv2.INTER_AREA)
+                        img_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
+                        processing_frames.append(img_rgb)
+                except Exception:
+                    pass
 
-            frame_idx += 1
-            
-        cap.release()
-                
-        if not frames:
-            return {"error": "Failed to load any frames from video"}
-            
-        logger.info(f"Collected {len(frames)} frames for CLIP analysis.")
-            
-    except Exception as e:
-        logger.error(f"Error loading frames: {e}")
-        return {"error": f"Frame loading error: {str(e)}"}
-
-    # 4. Generate & Normalize Embedding
-    try:
-        # Generate raw embedding (512,)
-        embedding = embedder.get_embedding(frames) 
-        if embedding is None:
-             return {"error": "Failed to generate embedding"}
-             
-        # Reshape for normalization (sklearn expects 2D array [n_samples, n_features])
-        embedding_2d = embedding.reshape(1, -1)
-        
-        # Normalize
-        normalized_embedding = normalize(embedding_2d)
-        
-        # 5. Predict
-        # LightGBM predict returns the predicted class (or probabilities)
-        prediction = model.predict(normalized_embedding)
-        label = prediction[0]
-        
-        # Convert numpy types to native python types for JSON serialization
-        if hasattr(label, 'item'):
-            label = int(label.item())
-        else:
-            label = int(label)
-
-        result = {
-            "predicted_class": label,
-            "predicted_label": ID_TO_LABEL.get(label, "unknown"),
-            "embedding_shape": list(embedding.shape)
-        }
-        
-        # 6. Cache result
+    # If still no frames, fallback to video capture
+    if not processing_frames:
+         # Fallback to video capture
+        SAMPLING_INTERVAL = 12
+        logger.info(f"Extracting frames from video (every {SAMPLING_INTERVAL}th frame)...")
         try:
-            with open(cache_path, 'w') as f:
-                json.dump(result, f, indent=4)
-            logger.info(f"Cached CLIP analysis to {cache_path}")
-        except Exception as e:
-            logger.warning(f"Failed to cache result: {e}")
-            
-        return result
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                pass
+            else:
+                frame_idx = 0
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                MAX_ANALYSIS_SECONDS = 120
+                max_frame_limit = int(fps * MAX_ANALYSIS_SECONDS) if fps > 0 else total_frames
+                
+                while True:
+                    if frame_idx > max_frame_limit: break
+                    ret, frame = cap.read()
+                    if not ret: break
+                    
+                    if frame_idx % SAMPLING_INTERVAL == 0:
+                         try:
+                            frame_resized = cv2.resize(frame, RESIZE_DIM, interpolation=cv2.INTER_AREA)
+                            img_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
+                            processing_frames.append(img_rgb)
+                         except: pass
+                    frame_idx += 1
+                cap.release()
+        except Exception: pass
+         
+    if not processing_frames:
+        return {"error": "No frames extracted or processing failed"}
+        
+    avg_embedding = embedder.get_embedding(processing_frames)
+    if avg_embedding is None:
+         return {"error": "Failed to generate embedding from frames"}
 
-    except Exception as e:
-        logger.error(f"Prediction error: {e}")
-        return {"error": f"Prediction failed: {str(e)}"}
+    # Ensure 2D for model
+    feature_vector = avg_embedding.reshape(1, -1)
+    
+    # Get Probability
+    probs = model.predict_proba(feature_vector)[0]
+    top_indices = np.argsort(probs)[::-1][:3]
+    
+    results = []
+    for idx in top_indices:
+        label = ID_TO_LABEL.get(idx, "Unknown")
+        score = float(probs[idx])
+        results.append({"label": label, "score": score})
+    
+    final_output = {
+        "predicted_label": results[0]["label"] if results else "Unknown"
+    }
+    
+    # Cache
+    try:
+        with open(cache_path, 'w') as f:
+            json.dump(final_output, f)
+    except: pass
+    
+    return final_output

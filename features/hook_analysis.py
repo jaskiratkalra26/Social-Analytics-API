@@ -10,7 +10,7 @@ import Config
 from features import visual_features, text_features, audio_features
 from pipeline import scene_detector, video_loader
 
-def analyze_hook(video_path: str, frame_folder: str) -> dict:
+def analyze_hook(video_path: str, frame_folder: str, frames: list = None) -> dict:
     """
     Analyzes the hook (first 3 seconds) of a video.
     Returns hook score and insights.
@@ -18,6 +18,7 @@ def analyze_hook(video_path: str, frame_folder: str) -> dict:
     Args:
         video_path (str): Path to the input video.
         frame_folder (str): Folder containing extracted frames from the video.
+        frames (list, optional): List of loaded frames to use instead of reading from disk.
         
     Returns:
         dict: Hook analysis result containing score, category, issues, and metrics.
@@ -36,9 +37,7 @@ def analyze_hook(video_path: str, frame_folder: str) -> dict:
     }
 
     # 1. Load Video Metadata for duration/fps
-    # We use this to confirm we can process the video, though frame count relies on extraction FPS
     try:
-        # Re-using video_loader but parsing the returned JSON string or loading file
         meta_json_str = video_loader.load_video_metadata(video_path)
         if meta_json_str:
             metadata = json.loads(meta_json_str)
@@ -49,31 +48,25 @@ def analyze_hook(video_path: str, frame_folder: str) -> dict:
         metadata = {}
 
     # 2. Determine Hook Duration (3 seconds) in frames
-    # Config.TARGET_FPS dictates the extraction rate.
-    # Default to 1 if not specified in Config
     extract_fps = getattr(Config, 'TARGET_FPS', 1) 
-    # Hook length in seconds
     hook_duration_sec = Config.HOOK_DURATION
-    # Number of frames covering the hook duration
     hook_frames_count = int(hook_duration_sec * extract_fps)
-    # Ensure at least 3 frames are checked if FPS is high, or strictly 3 if FPS=1
     if hook_frames_count < 2: 
-        hook_frames_count = 2 # Minimum for motion flow calculation
+        hook_frames_count = 2
 
     # 3. Visual Features (Motion)
-    # Calculate motion on first few frames
     try:
-        # Reuse existing module with new max_frames parameter
-        motion_data = visual_features.motion_features(frame_folder, max_frames=hook_frames_count)
+        # Pass frames list to motion_features
+        motion_data = visual_features.motion_features(frame_folder, max_frames=hook_frames_count, frames=frames)
         motion_intensity = motion_data.get("motion_intensity", 0.0)
     except Exception as e:
         print(f"Error calculating motion: {e}")
         motion_intensity = 0.0
 
     # 4. Text Features (Hook Text Ratio)
-    # existing text_features.extract_text_features already computes 'hook_text_ratio' (first 5 frames)
     try:
-        text_data = text_features.extract_text_features(frame_folder)
+        # Pass frames list to extract_text_features
+        text_data = text_features.extract_text_features(frame_folder, frames=frames)
         hook_text_ratio = text_data.get("hook_text_ratio", 0.0)
     except Exception as e:
         print(f"Error extracting text features: {e}")

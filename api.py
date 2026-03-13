@@ -1,17 +1,38 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 import shutil
 import os
 import uuid
 import logging
+import sys
+
+# Add project root to path
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
 from social_analytics_pipeline import analyze_video
+from features import clip_analysis
 import Config
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SocialAnalyticsAPI")
 
-app = FastAPI(title="Social Analytics API", description="API for analyzing social media videos.")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Load heavy models
+    logger.info("Loading CLIP and ML models into memory...")
+    clip_analysis.preload_models()
+    logger.info("Models loaded and ready.")
+    yield
+    # Shutdown: Clean up if needed
+    pass
+
+app = FastAPI(title="Social Analytics API", description="API for analyzing social media videos.", lifespan=lifespan)
+
+@app.get("/")
+def health_check():
+    return {"status": "ok", "service": "Social Analytics API"}
 
 UPLOAD_DIR = "temp_uploads"
 if not os.path.exists(UPLOAD_DIR):

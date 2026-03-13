@@ -28,17 +28,22 @@ def extract_frames(video_path, fps_sampling=None, duration=None):
     
     # Check if frames already exist to avoid re-extraction
     if os.path.exists(output_dir):
-        existing_frames = [f for f in os.listdir(output_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-        if existing_frames:
-            print(f"Frames already extracted at: {output_dir}")
-            return output_dir
+        existing_frames_files = sorted([f for f in os.listdir(output_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
+        if existing_frames_files:
+            print(f"Frames already extracted at: {output_dir}. Loading into memory...")
+            frames_cache = []
+            for f in existing_frames_files:
+                img = cv2.imread(os.path.join(output_dir, f))
+                if img is not None:
+                    frames_cache.append(img)
+            return output_dir, frames_cache
             
     os.makedirs(output_dir, exist_ok=True)
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video {video_path}")
-        return output_dir
+        return output_dir, []
 
     video_fps = cap.get(cv2.CAP_PROP_FPS)
     target_fps = fps_sampling if fps_sampling is not None else Config.TARGET_FPS
@@ -48,37 +53,41 @@ def extract_frames(video_path, fps_sampling=None, duration=None):
         frame_interval = int(video_fps / target_fps)
     else:
         frame_interval = 1
-    
-    # Ensure interval is at least 1
-    frame_interval = max(1, frame_interval)
-
+        
+    extracted_frames = []
     frame_count = 0
     saved_count = 0
-    
-    max_frames = int(duration * video_fps) if duration else float('inf')
+
+    # Calculate max frames based on duration if provided
+    max_frame_limit = float('inf')
+    if duration:
+        max_frame_limit = int(duration * video_fps)
 
     while True:
-        ret, frame = cap.read()
-        if not ret:
+        success, frame = cap.read()
+        if not success:
             break
             
-        if frame_count >= max_frames:
+        if frame_count > max_frame_limit:
             break
 
-        # Check if this frame should be saved
         if frame_count % frame_interval == 0:
-            frame_filename = f"frame_{saved_count:04d}.jpg"
-            frame_path = os.path.join(output_dir, frame_filename)
-            cv2.imwrite(frame_path, frame)
+            # Resize if needed for speed/storage
+            if Config.FRAME_MAX_WIDTH and frame.shape[1] > Config.FRAME_MAX_WIDTH:
+                scale = Config.FRAME_MAX_WIDTH / frame.shape[1]
+                # Keep aspect ratio
+                frame = cv2.resize(frame, (Config.FRAME_MAX_WIDTH, int(frame.shape[0] * scale)))
+            
+            extracted_frames.append(frame)
+            
+            # Save frame to disk
+            frame_filename = os.path.join(output_dir, f"frame_{saved_count:04d}.jpg")
+            cv2.imwrite(frame_filename, frame)
             saved_count += 1
 
         frame_count += 1
 
     cap.release()
-    # print(f"Extracted {saved_count} frames from {video_path} into {output_dir}")
-    return output_dir
+    print(f"Extracted {saved_count} frames to {output_dir}")
+    return output_dir, extracted_frames
 
-if __name__ == "__main__":
-    # Example usage
-    # extract_frames("path/to/video.mp4")
-    pass

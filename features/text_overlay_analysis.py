@@ -7,33 +7,22 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import Config
 from features.text_features import extract_text_features
 
-def analyze_text_overlay(frame_folder: str) -> dict:
+def analyze_text_overlay(frame_folder: str, frames: list = None) -> dict:
     """
-    Analyzes text overlay metrics from video frames to determine readability,
-    clutter, and effectiveness.
-
-    Args:
-        frame_folder (str): Path to the folder containing extracted video frames.
-
-    Returns:
-        dict: A dictionary containing the text quality score, category, detected issues,
-              improvement suggestions, and the original text metrics.
+    Analyzes text overlay metrics.
     """
     
-    # Check if frame folder exists
-    if not os.path.exists(frame_folder):
+    # Check if we have frames OR folder
+    if (frames is None or len(frames) == 0) and not (frame_folder and os.path.exists(frame_folder)):
         return {
-            "text_score": 0,
-            "text_category": "error",
-            "issues_detected": ["Frame folder not found"],
-            "improvement_suggestions": [],
-            "text_metrics": {}
+            "text_score": 0, "text_category": "error", "issues_detected": ["No frames available"],
+            "improvement_suggestions": [], "text_metrics": {}
         }
 
     try:
         # Get OCR metrics
         # Setting verbose=False as per requirements for production/API usage
-        text_metrics = extract_text_features(frame_folder, verbose=False)
+        text_metrics = extract_text_features(frame_folder, verbose=False, frames=frames)
     except Exception as e:
         return {
             "text_score": 0,
@@ -42,12 +31,7 @@ def analyze_text_overlay(frame_folder: str) -> dict:
             "improvement_suggestions": [],
             "text_metrics": {}
         }
-
-    # Initialize analysis variables
-    score = 100
-    issues = []
-    suggestions = []
-
+    
     # Extract metrics for easier access
     # Defaulting to 0 if key is missing to avoid crashes, though extract_text_features should return them
     text_presence_ratio = text_metrics.get("text_presence_ratio", 0)
@@ -57,7 +41,11 @@ def analyze_text_overlay(frame_folder: str) -> dict:
     hook_text_ratio = text_metrics.get("hook_text_ratio", 0)
     reading_speed = text_metrics.get("reading_speed", 0)
     motion_score = text_metrics.get("motion_score", 0)
-
+    
+    # Initialize analysis variables
+    score = 100
+    issues = []
+    suggestions = []
 
     # --- Rule Engine ---
 
@@ -79,11 +67,8 @@ def analyze_text_overlay(frame_folder: str) -> dict:
     else:
         # Rule 1 — Text Too Small
         # Only check size if we have enough confident text to measure
-        if font_size_score < 0.01: # Check against hard lower bound for noise
-             # If score is extremely low despite presence > 0.05, it might still be noise
-             # But if it is real text, it is indeed too small.
-             pass
-
+        # Check against hard lower bound for noise, if extremely low despite presence > 0.05
+        
         if font_size_score < Config.FONT_SIZE_LOW:
             score -= Config.TEXT_PENALTY_SMALL_FONT
             issues.append("Text too small to read on most screens")

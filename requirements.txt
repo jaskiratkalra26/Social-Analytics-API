@@ -2,7 +2,7 @@ opencv-python
 scenedetect[opencv]
 moviepy
 numpy<2.0
-pytesseract
+easyocr
 librosa
 lightgbm
 scikit-learn

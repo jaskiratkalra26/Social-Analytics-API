@@ -7,7 +7,16 @@ class ClipEmbedder:
     def __init__(self, model_name="openai/clip-vit-base-patch32"):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Loading CLIP model '{model_name}' to {self.device}...")
-        self.model = CLIPModel.from_pretrained(model_name).to(self.device)
+        
+        # Optimize loading speed
+        try:
+            import accelerate
+            loading_kwargs = {"low_cpu_mem_usage": True}
+        except ImportError:
+            loading_kwargs = {}
+
+        # Load optimized
+        self.model = CLIPModel.from_pretrained(model_name, **loading_kwargs).to(self.device)
         self.processor = CLIPProcessor.from_pretrained(model_name)
         self.model.eval()
 
