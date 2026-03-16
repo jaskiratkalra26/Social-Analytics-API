@@ -187,12 +187,13 @@ def motion_features(frame_folder, max_frames=None, frames=None):
         "motion_intensity": float(motion_intensity)
     }
 
-def quality_features(frame_folder):
+def quality_features(frame_folder, frames=None):
     """
     Computes visual quality signals for frames.
     
     Args:
         frame_folder: Path to folder containing extracted frames
+        frames: Optional list of numpy.ndarray frames. If provided, skips loading from disk.
         
     Returns:
         Dictionary with keys:
@@ -200,24 +201,12 @@ def quality_features(frame_folder):
         - contrast_mean
         - blur_score
     """
-    files = get_sorted_frame_paths(frame_folder)
-    
-    if not files:
-        return {
-            "brightness_mean": 0.0,
-            "contrast_mean": 0.0,
-            "blur_score": 0.0
-        }
-        
     brightness_values = []
     contrast_values = []
     blur_values = []
     
-    for f in files:
-        frame = cv2.imread(f)
-        if frame is None:
-            continue
-            
+    def _process(frame):
+        if frame is None: return
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         # 1) Brightness: Mean grayscale intensity
@@ -231,6 +220,20 @@ def quality_features(frame_folder):
         # 3) Blur score: Laplacian variance
         blur = cv2.Laplacian(gray_frame, cv2.CV_64F).var()
         blur_values.append(blur)
+
+    if frames is not None and len(frames) > 0:
+        for frame in frames:
+            _process(frame)
+    else:
+        files = get_sorted_frame_paths(frame_folder)
+        if not files:
+            return {
+                "brightness_mean": 0.0,
+                "contrast_mean": 0.0,
+                "blur_score": 0.0
+            }
+        for f in files:
+            _process(cv2.imread(f))
         
     return {
         "brightness_mean": float(np.mean(brightness_values)) if brightness_values else 0.0,
@@ -238,22 +241,23 @@ def quality_features(frame_folder):
         "blur_score": float(np.mean(blur_values)) if blur_values else 0.0
     }
 
-def subject_features(frame_folder):
+def subject_features(frame_folder, frames=None):
     """
     Detects presence of human faces using Haar Cascade.
+    Computes subject presentation metrics: face ratio, average face size, centering, sharpness, and brightness.
     
     Args:
         frame_folder: Path to folder containing extracted frames
+        frames: Optional list of numpy.ndarray frames. If provided, skips loading from disk.
         
     Returns:
-        Dictionary with key:
+        Dictionary with keys:
         - face_ratio: number_of_frames_with_faces / total_frames
+        - avg_face_size: Average ratio of face area to frame area
+        - face_centering: Average score of how centered the face is (0 to 1)
+        - face_sharpness: Average Laplacian variance of face regions
+        - face_brightness: Average mean intensity of face regions
     """
-    files = get_sorted_frame_paths(frame_folder)
-    
-    if not files:
-        return {"face_ratio": 0.0}
-    
     # Load Haar Cascade for face detection
     # Using the default xml provided by cv2
     cascade_path = os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml')
@@ -269,15 +273,25 @@ def subject_features(frame_folder):
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         if face_cascade.empty():
             # If still empty, we can't detect faces, return 0.0 to be safe
-            return {"face_ratio": 0.0}
+            return {
+                "face_ratio": 0.0,
+                "avg_face_size": 0.0,
+                "face_centering": 0.0,
+                "face_sharpness": 0.0,
+                "face_brightness": 0.0
+            }
     
     frames_with_faces = 0
     total_frames = 0
     
-    for f in files:
-        frame = cv2.imread(f)
-        if frame is None:
-            continue
+    face_size_ratios = []
+    face_centering_scores = []
+    face_sharpness_scores = []
+    face_brightness_scores = []
+    
+    def _process(frame):
+        nonlocal frames_with_faces, total_frames
+        if frame is None: return
             
         total_frames += 1
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -293,35 +307,90 @@ def subject_features(frame_folder):
         if len(faces) > 0:
             frames_with_faces += 1
             
+            frame_height, frame_width = gray_frame.shape
+            frame_area = frame_width * frame_height
+            frame_center_x = frame_width / 2
+            frame_center_y = frame_height / 2
+            
+            # Max possible distance is center to corner
+            max_distance = np.sqrt((frame_width/2)**2 + (frame_height/2)**2)
+            if max_distance == 0:
+                max_distance = 1.0 # Prevent division by zero
+            
+            for (x, y, w, h) in faces:
+                # 1. Face Size Ratio
+                face_area = w * h
+                size_ratio = face_area / frame_area if frame_area > 0 else 0
+                face_size_ratios.append(size_ratio)
+                
+                # 2. Face Centering Score
+                face_center_x = x + w / 2
+                face_center_y = y + h / 2
+                
+                distance = np.sqrt((face_center_x - frame_center_x)**2 + (face_center_y - frame_center_y)**2)
+                centering_score = 1 - (distance / max_distance)
+                # Clamp score to 0 just in case
+                centering_score = max(0.0, centering_score)
+                face_centering_scores.append(centering_score)
+                
+                # Extract face region for quality analysis
+                roi_gray = gray_frame[y:y+h, x:x+w]
+                
+                if roi_gray.size > 0:
+                    # 3. Face Sharpness
+                    sharpness = cv2.Laplacian(roi_gray, cv2.CV_64F).var()
+                    face_sharpness_scores.append(sharpness)
+                    
+                    # 4. Face Brightness
+                    brightness = np.mean(roi_gray)
+                    face_brightness_scores.append(brightness)
+
+    if frames is not None and len(frames) > 0:
+        for frame in frames:
+            _process(frame)
+    else:
+        files = get_sorted_frame_paths(frame_folder)
+        if not files:
+            return {
+                "face_ratio": 0.0,
+                "avg_face_size": 0.0,
+                "face_centering": 0.0,
+                "face_sharpness": 0.0,
+                "face_brightness": 0.0
+            }
+        for f in files:
+            _process(cv2.imread(f))
+            
     face_ratio = (frames_with_faces / total_frames) if total_frames > 0 else 0.0
+    avg_face_size = np.mean(face_size_ratios) if face_size_ratios else 0.0
+    face_centering = np.mean(face_centering_scores) if face_centering_scores else 0.0
+    face_sharpness = np.mean(face_sharpness_scores) if face_sharpness_scores else 0.0
+    face_brightness = np.mean(face_brightness_scores) if face_brightness_scores else 0.0
     
     return {
-        "face_ratio": float(face_ratio)
+        "face_ratio": float(face_ratio),
+        "avg_face_size": float(avg_face_size),
+        "face_centering": float(face_centering),
+        "face_sharpness": float(face_sharpness),
+        "face_brightness": float(face_brightness)
     }
 
-def composition_features(frame_folder):
+def composition_features(frame_folder, frames=None):
     """
     Estimates center focus score based on brightness of center region.
     
     Args:
         frame_folder: Path to folder containing extracted frames
+        frames: Optional list of numpy.ndarray frames. If provided, skips loading from disk.
         
     Returns:
         Dictionary with key:
         - center_focus_score: average mean brightness of center region
     """
-    files = get_sorted_frame_paths(frame_folder)
-    
-    if not files:
-        return {"center_focus_score": 0.0}
-        
     center_scores = []
     
-    for f in files:
-        frame = cv2.imread(f)
-        if frame is None:
-            continue
-            
+    def _process(frame):
+        if frame is None: return
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         height, width = gray_frame.shape
         
@@ -339,18 +408,29 @@ def composition_features(frame_folder):
             
         mean_brightness = np.mean(center_region)
         center_scores.append(mean_brightness)
+
+    if frames is not None and len(frames) > 0:
+        for frame in frames:
+            _process(frame)
+    else:
+        files = get_sorted_frame_paths(frame_folder)
+        if not files:
+            return {"center_focus_score": 0.0}
+        for f in files:
+            _process(cv2.imread(f))
         
     return {
         "center_focus_score": float(np.mean(center_scores)) if center_scores else 0.0
     }
 
-def extract_visual_features(frame_folder, scene_list=None):
+def extract_visual_features(frame_folder, scene_list=None, frames=None):
     """
     Master function to aggregate all visual features.
     
     Args:
         frame_folder: Path to folder containing extracted frames
         scene_list: List of tuples (start_time, end_time). Optional.
+        frames: Optional list of numpy.ndarray frames.
         
     Returns:
         Dictionary containing all combined features
@@ -365,15 +445,15 @@ def extract_visual_features(frame_folder, scene_list=None):
     all_features.update(scene_features(scene_list))
     
     # 2. Motion & Energy Signals
-    all_features.update(motion_features(frame_folder))
+    all_features.update(motion_features(frame_folder, frames=frames))
     
     # 3. Visual Quality Signals
-    all_features.update(quality_features(frame_folder))
+    all_features.update(quality_features(frame_folder, frames=frames))
     
     # 4. Subject Detection
-    all_features.update(subject_features(frame_folder))
+    all_features.update(subject_features(frame_folder, frames=frames))
     
     # 5. Composition Signals
-    all_features.update(composition_features(frame_folder))
+    all_features.update(composition_features(frame_folder, frames=frames))
     
     return all_features

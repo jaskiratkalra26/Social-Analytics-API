@@ -10,7 +10,7 @@ import Config
 from features import visual_features, text_features, audio_features
 from pipeline import scene_detector, video_loader
 
-def analyze_hook(video_path: str, frame_folder: str, frames: list = None) -> dict:
+def analyze_hook(video_path: str, frame_folder: str, frames: list = None, scenes: list = None) -> dict:
     """
     Analyzes the hook (first 3 seconds) of a video.
     Returns hook score and insights.
@@ -109,8 +109,9 @@ def analyze_hook(video_path: str, frame_folder: str, frames: list = None) -> dic
     scene_cuts_first_3s = 0
     try:
         # Detect scenes returns list of (start, end)
-        scenes = scene_detector.detect_scenes(video_path)
-        
+        if scenes is None:
+            scenes = scene_detector.detect_scenes(video_path)
+            
         # Count scenes starting between 0 (exclusive) and Config.HOOK_DURATION
         # A cut is a transition. The first scene starts at 0.0 (usually).
         # Subsequent starts imply cuts.

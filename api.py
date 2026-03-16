@@ -11,7 +11,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from social_analytics_pipeline import analyze_video
-from features import clip_analysis
+from analysis import clip_analysis
 import Config
 
 # Configure Logging

@@ -19,7 +19,7 @@ from features import text_features
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def analyze_pacing(video_path: str, frame_folder: str = None, frames: list = None) -> dict:
+def analyze_pacing(video_path: str, frame_folder: str = None, frames: list = None, scenes: list = None) -> dict:
     """
     Analyzes a video for pacing metrics.
     """
@@ -48,7 +48,9 @@ def analyze_pacing(video_path: str, frame_folder: str = None, frames: list = Non
 
         # --- 3. Scene / Editing Features ---
         logger.info("Detecting scenes...")
-        scenes = scene_detector.detect_scenes(video_path)
+        # scenes = scene_detector.detect_scenes(video_path)
+        if scenes is None:
+             scenes = scene_detector.detect_scenes(video_path)
         
         number_of_cuts = len(scenes)
         

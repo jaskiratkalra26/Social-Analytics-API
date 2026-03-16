@@ -9,8 +9,10 @@ import concurrent.futures
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 import Config
-from pipeline import video_loader, frame_extractor, audio_extractor
-from features import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, popular_hashtags, platform_recommendation
+from pipeline import video_loader, frame_extractor, audio_extractor, scene_detector
+from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation
+from analysis.storytelling_clarity import compute_storytelling_clarity
+from features import popular_hashtags, visual_features
 
 # Configure Logging
 logging.basicConfig(
@@ -19,6 +21,20 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger("SocialAnalytics")
+
+def run_subject_analysis(frame_folder, frames):
+    """
+    Helper to run subject analysis in parallel.
+    Consisting of:
+    1. Extract visual_features (subject_features)
+    2. Compute subject_presentation score
+    """
+    try:
+        raw_features = visual_features.subject_features(frame_folder, frames=frames)
+        return subject_presentation.compute_subject_presentation(raw_features)
+    except Exception as e:
+        logger.error(f"Subject analysis error: {e}")
+        return {"error": str(e)}
 
 def analyze_video(video_path: str) -> dict:
     """
@@ -43,6 +59,8 @@ def analyze_video(video_path: str) -> dict:
         "lighting_analysis": {},
         "text_analysis": {},
         "content_classification": {},
+        "subject_presentation": {},
+        "storytelling_clarity": {},
         "platform_recommendation": {},
         "popular_hashtags": []
     }
@@ -53,6 +71,7 @@ def analyze_video(video_path: str) -> dict:
     frame_folder = None
     frames_list = [] # List to hold in-memory frames
     audio_path = None
+    scene_list = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
         # Define tasks
@@ -64,6 +83,8 @@ def analyze_video(video_path: str) -> dict:
         
         future_audio = executor.submit(audio_extractor.extract_audio, video_path)
         
+        future_scenes = executor.submit(scene_detector.detect_scenes, video_path)
+
         # Wait for results
         try:
             meta_json = future_meta.result()
@@ -92,17 +113,24 @@ def analyze_video(video_path: str) -> dict:
                  logger.info(f"Audio extracted to: {audio_path}")
         except Exception as e:
             logger.error(f"Audio extraction error: {e}")
+            
+        try:
+            scene_list = future_scenes.result()
+            logger.info(f"Detected {len(scene_list)} scenes")
+        except Exception as e:
+             logger.error(f"Scene detection error: {e}")
 
     # --- STAGE 2: Analysis Modules (Parallel) ---
     logger.info("Starting analysis phase...")
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         # Pass frames_list to all functions
-        future_hook = executor.submit(hook_analysis.analyze_hook, video_path, frame_folder, frames=frames_list)
-        future_pacing = executor.submit(pacing_analysis.analyze_pacing, video_path, frame_folder=frame_folder, frames=frames_list)
+        future_hook = executor.submit(hook_analysis.analyze_hook, video_path, frame_folder, frames=frames_list, scenes=scene_list)
+        future_pacing = executor.submit(pacing_analysis.analyze_pacing, video_path, frame_folder=frame_folder, frames=frames_list, scenes=scene_list)
         future_lighting = executor.submit(lighting_analysis.analyze_lighting, video_path, frame_folder=frame_folder, frames=frames_list)
         future_text = executor.submit(text_overlay_analysis.analyze_text_overlay, frame_folder, frames=frames_list)
         future_clip = executor.submit(clip_analysis.analyze_content, video_path, frame_folder, frames=frames_list)
+        future_subject = executor.submit(run_subject_analysis, frame_folder, frames_list)
         
         # Collect results as they complete
 
@@ -136,6 +164,47 @@ def analyze_video(video_path: str) -> dict:
             logger.error(f"Content classification error: {e}")
             results["content_classification"] = {"error": str(e)}
 
+        try:
+            results["subject_presentation"] = future_subject.result()
+        except Exception as e:
+            logger.error(f"Subject presentation error: {e}")
+            results["subject_presentation"] = {"error": str(e)}
+
+    # --- Storytelling Clarity Analysis ---
+    logger.info("Running Storytelling Clarity Analysis...")
+    try:
+        # Extract metrics safely with defaults
+        pacing_data = results.get("pacing_analysis", {})
+        text_data = results.get("text_analysis", {})
+        hook_metrics = results.get("hook_analysis", {}).get("hook_metrics", {})
+        text_metrics = text_data.get("text_metrics", {})
+        
+        clarity_metrics = {
+            "pace_score": pacing_data.get("pace_score", 0) / 100.0,
+            
+            # Normalize motion (0-10 -> 0-1 range approx)
+            "motion_flow_score": min(pacing_data.get("motion_intensity", 0) / Config.PACING_NORM_MOTION, 1.0),
+            
+            # Text presence ratio (already 0-1)
+            "text_support_score": text_metrics.get("text_presence_ratio", 0),
+            
+            # Scene consistency: Inverse of variance (normalized)
+            "scene_consistency_score": max(0, 1.0 - (pacing_data.get("shot_duration_variance", 0) / Config.PACING_NORM_VARIANCE)),
+            
+            # Text readability: Approximation via font size score or general text score
+            "text_readability_score": text_metrics.get("font_size_score", 0) / 100.0, 
+
+            # Hook text ratio
+            "hook_text_ratio": hook_metrics.get("hook_text_ratio", 0)
+        }
+        
+        results["storytelling_clarity"] = compute_storytelling_clarity(clarity_metrics)
+        
+    except Exception as e:
+        logger.error(f"Storytelling clarity error: {e}")
+        results["storytelling_clarity"] = {"error": str(e)}
+
+
     # Platform Recommendation & Hashtags
     logger.info("Running Platform Recommendation & Hashtag Generation...")
     try:
@@ -150,10 +219,12 @@ def analyze_video(video_path: str) -> dict:
         }
         
         # Get Recommendation
+        results["platform_recommendation"] = {}
         results["platform_recommendation"] = platform_recommendation.recommend_platform(video_features)
         
         # Get Hashtags & Upload Time based on niche
         niche = video_features["niche"]
+        results["popular_hashtags"] = [] 
         if niche:
             results["popular_hashtags"] = popular_hashtags.get_popular_hashtags_by_category(niche)
             results["upload_schedule"] = {
@@ -165,15 +236,18 @@ def analyze_video(video_path: str) -> dict:
         logger.error(f"Platform recommendation error: {e}")
         results["platform_recommendation"] = {"error": str(e)}
 
+
     # 5. Calculate Overall Score (Simple Average Strategy)
     try:
         hook_score = results["hook_analysis"].get("hook_score", 0)
         pace_score = results["pacing_analysis"].get("pace_score", 0)
         light_score = results["lighting_analysis"].get("lighting_score", 0)
         text_score = results["text_analysis"].get("text_score", 0)
+        subject_score = results["subject_presentation"].get("presentation_score", 0)
         
-        # Weighted average
-        total_score = (hook_score * 0.35) + (pace_score * 0.25) + (text_score * 0.25) + (light_score * 0.15)
+        # Weighted average (Adjusted weights)
+        # Hook: 30%, Pacing: 20%, Text: 20%, Light: 15%, Subject: 15%
+        total_score = (hook_score * 0.30) + (pace_score * 0.20) + (text_score * 0.20) + (light_score * 0.15) + (subject_score * 0.15)
         results["viral_score"] = round(total_score, 1)
         
     except Exception:
