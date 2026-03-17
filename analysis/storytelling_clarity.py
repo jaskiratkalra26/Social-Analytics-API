@@ -21,6 +21,7 @@ def compute_storytelling_clarity(metrics: dict) -> dict:
     # Step 1: Extract Metrics
     # Using .get() with 0.0 defaults to handle missing metrics safely
     pace_score = metrics.get("pace_score", 0.0)
+    pace_category = metrics.get("pace_category", "optimal")
     motion_flow_score = metrics.get("motion_flow_score", 0.0)
     text_support_score = metrics.get("text_support_score", 0.0)
     scene_consistency_score = metrics.get("scene_consistency_score", 0.0)
@@ -47,8 +48,18 @@ def compute_storytelling_clarity(metrics: dict) -> dict:
 
     # Pacing problems
     if pace_score < 0.5:
-        issues.append("Video pacing is inconsistent or too fast")
-        suggestions.append("Reduce scene transition speed for better storytelling flow")
+        if pace_category == "too_fast":
+             issues.append("Video pacing is inconsistent or too fast")
+             suggestions.append("Reduce scene transition speed for better storytelling flow")
+        elif pace_category == "slow":
+             issues.append("Video pacing is too slow or static")
+             suggestions.append("Increase scene transitions to maintain interest")
+        elif pace_category == "optimal" and pace_score < 40:
+             issues.append("Pacing is optimal but visual engagement is low")
+             suggestions.append("Add more motion, text, or visual variety")
+        else:
+             issues.append("Video pacing is inconsistent")
+             suggestions.append("Ensure consistent scene transitions for better storytelling flow")
 
     # Low motion
     if motion_flow_score < 0.4:
@@ -65,10 +76,10 @@ def compute_storytelling_clarity(metrics: dict) -> dict:
         issues.append("Scene transitions appear inconsistent")
         suggestions.append("Maintain more consistent shot durations")
 
-    # Poor text readability
-    if text_readability_score < 0.5:
-        issues.append("Text overlays are difficult to read")
-        suggestions.append("Increase font size or slow down text appearance")
+    # Poor text readability (Score < 15 means extremely small text)
+    if text_readability_score < 0.15:
+        issues.append("Text overlays are difficult to read (too small)")
+        suggestions.append("Increase font size for better readability")
 
     # Weak introduction
     if hook_text_ratio < 0.1:

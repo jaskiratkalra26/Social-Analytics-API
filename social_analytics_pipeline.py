@@ -10,9 +10,9 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 import Config
 from pipeline import video_loader, frame_extractor, audio_extractor, scene_detector
-from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation
+from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation, viral_analysis, audio_analysis
 from analysis.storytelling_clarity import compute_storytelling_clarity
-from features import popular_hashtags, visual_features
+from features import popular_hashtags, visual_features, audio_features
 
 # Configure Logging
 logging.basicConfig(
@@ -34,6 +34,22 @@ def run_subject_analysis(frame_folder, frames):
         return subject_presentation.compute_subject_presentation(raw_features)
     except Exception as e:
         logger.error(f"Subject analysis error: {e}")
+        return {"error": str(e)}
+
+def run_audio_analysis(audio_path):
+    """
+    Helper to run audio analysis.
+    1. Extract audio features
+    2. Compute audio analysis
+    """
+    if not audio_path or not os.path.exists(audio_path):
+        return {"error": "Audio file missing"}
+        
+    try:
+        features = audio_features.extract_audio_features(audio_path)
+        return audio_analysis.compute_audio_analysis(features)
+    except Exception as e:
+        logger.error(f"Audio analysis error: {e}")
         return {"error": str(e)}
 
 def analyze_video(video_path: str) -> dict:
@@ -58,6 +74,7 @@ def analyze_video(video_path: str) -> dict:
         "pacing_analysis": {},
         "lighting_analysis": {},
         "text_analysis": {},
+        "audio_analysis": {},
         "content_classification": {},
         "subject_presentation": {},
         "storytelling_clarity": {},
@@ -123,7 +140,7 @@ def analyze_video(video_path: str) -> dict:
     # --- STAGE 2: Analysis Modules (Parallel) ---
     logger.info("Starting analysis phase...")
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=7) as executor:
         # Pass frames_list to all functions
         future_hook = executor.submit(hook_analysis.analyze_hook, video_path, frame_folder, frames=frames_list, scenes=scene_list)
         future_pacing = executor.submit(pacing_analysis.analyze_pacing, video_path, frame_folder=frame_folder, frames=frames_list, scenes=scene_list)
@@ -131,6 +148,7 @@ def analyze_video(video_path: str) -> dict:
         future_text = executor.submit(text_overlay_analysis.analyze_text_overlay, frame_folder, frames=frames_list)
         future_clip = executor.submit(clip_analysis.analyze_content, video_path, frame_folder, frames=frames_list)
         future_subject = executor.submit(run_subject_analysis, frame_folder, frames_list)
+        future_audio = executor.submit(run_audio_analysis, audio_path)
         
         # Collect results as they complete
 
@@ -157,6 +175,12 @@ def analyze_video(video_path: str) -> dict:
         except Exception as e:
             logger.error(f"Text analysis error: {e}")
             results["text_analysis"] = {"error": str(e)}
+            
+        try:
+            results["audio_analysis"] = future_audio.result()
+        except Exception as e:
+            logger.error(f"Audio analysis error: {e}")
+            results["audio_analysis"] = {"error": str(e)}
 
         try:
             results["content_classification"] = future_clip.result()
@@ -181,6 +205,7 @@ def analyze_video(video_path: str) -> dict:
         
         clarity_metrics = {
             "pace_score": pacing_data.get("pace_score", 0) / 100.0,
+            "pace_category": pacing_data.get("pace_category", "optimal"),
             
             # Normalize motion (0-10 -> 0-1 range approx)
             "motion_flow_score": min(pacing_data.get("motion_intensity", 0) / Config.PACING_NORM_MOTION, 1.0),
@@ -237,21 +262,29 @@ def analyze_video(video_path: str) -> dict:
         results["platform_recommendation"] = {"error": str(e)}
 
 
-    # 5. Calculate Overall Score (Simple Average Strategy)
+    # 5. Viral Pattern Analysis (Final Aggregation)
+    logger.info("Running Viral Pattern Analysis...")
     try:
-        hook_score = results["hook_analysis"].get("hook_score", 0)
-        pace_score = results["pacing_analysis"].get("pace_score", 0)
-        light_score = results["lighting_analysis"].get("lighting_score", 0)
-        text_score = results["text_analysis"].get("text_score", 0)
-        subject_score = results["subject_presentation"].get("presentation_score", 0)
+        pacing_data = results.get("pacing_analysis", {})
+        text_metrics = results.get("text_analysis", {}).get("text_metrics", {})
+        story_data = results.get("storytelling_clarity", {})
         
-        # Weighted average (Adjusted weights)
-        # Hook: 30%, Pacing: 20%, Text: 20%, Light: 15%, Subject: 15%
-        total_score = (hook_score * 0.30) + (pace_score * 0.20) + (text_score * 0.20) + (light_score * 0.15) + (subject_score * 0.15)
-        results["viral_score"] = round(total_score, 1)
+        viral_metrics = {
+            "hook_score": results.get("hook_analysis", {}).get("hook_score", 0) / 100.0,
+            "pace_score": pacing_data.get("pace_score", 0) / 100.0,
+            "pace_category": pacing_data.get("pace_category", "optimal"),
+            "motion_flow_score": min(pacing_data.get("motion_intensity", 0) / Config.PACING_NORM_MOTION, 1.0),
+            "text_support_score": text_metrics.get("text_presence_ratio", 0),
+            "subject_presentation_score": results.get("subject_presentation", {}).get("presentation_score", 0) / 100.0,
+            "storytelling_clarity_score": story_data.get("clarity_score", 0) / 100.0
+        }
         
-    except Exception:
-        results["viral_score"] = 0
+        results["viral_analysis"] = viral_analysis.compute_viral_analysis(viral_metrics)
+        # results["viral_score"] is now available inside results["viral_analysis"]["viral_score"]
+        
+    except Exception as e:
+        logger.error(f"Viral analysis error: {e}")
+        results["viral_analysis"] = {"viral_score": 0, "error": str(e)}
 
     return results
 

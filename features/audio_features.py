@@ -110,18 +110,16 @@ def extract_audio_features(audio_path):
     # 7. MFCC Features
     mfcc_dict = mfcc_features(y, sr)
 
-    features = {
+    # Return master dictionary with all features
+    return {
         "audio_energy": audio_energy,
         "beat_strength": beat_strength,
         "tempo_bpm": tempo_bpm,
         "speech_clarity": speech_clarity,
-        "hook_audio_intensity": hook_audio_intensity
+        "hook_audio_intensity": hook_audio_intensity,
+        **spectrogram_dict,
+        **mfcc_dict
     }
-    
-    features.update(spectrogram_dict)
-    features.update(mfcc_dict)
-    
-    return features
 
 def spectrogram_features(y, sr):
     """

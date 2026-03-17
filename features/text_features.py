@@ -89,6 +89,11 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
         reader = get_reader()
         print(f"Starting OCR on {num_sampled} frames using EasyOCR...")
 
+        # Optimization: Cache previous frame to skip processing static scenes
+        prev_img_small = None
+        prev_ocr_result = []
+        similarity_threshold = getattr(Config, 'OCR_SIMILARITY_THRESHOLD', 0.01)
+
         for i, idx in enumerate(sampled_indices):
             item = frames_to_process[idx]
             if isinstance(item, str):
@@ -102,8 +107,35 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
             frame_area = float(width * height)
             if frame_area == 0: continue
 
+            # Check visual similarity to previous frame to skip redundant OCR
+            should_run_ocr = True
             try:
-                result = reader.readtext(img) if reader else []
+                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img_small = cv2.resize(img_gray, (64, 64))
+                
+                if prev_img_small is not None:
+                     diff = np.mean(np.abs(img_small.astype("float32") - prev_img_small.astype("float32"))) / 255.0
+                     if diff < similarity_threshold:
+                         should_run_ocr = False
+                
+                prev_img_small = img_small
+            except Exception:
+                should_run_ocr = True
+
+            try:
+                if not should_run_ocr:
+                    result = prev_ocr_result
+                else:
+                    # Downscale again for OCR if needed (very large frames are slow)
+                    # target width 640-800 is usually optimal for EasyOCR
+                    if img.shape[1] > 800:
+                        scale_ocr = 800 / img.shape[1]
+                        img_ocr = cv2.resize(img, (800, int(img.shape[0] * scale_ocr)))
+                    else:
+                        img_ocr = img
+
+                    result = reader.readtext(img_ocr) if reader else []
+                    prev_ocr_result = result
             except Exception as e:
                 if verbose: print(f"OCR Error: {e}")
                 result = []
