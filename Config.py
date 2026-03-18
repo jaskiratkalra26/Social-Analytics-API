@@ -48,6 +48,10 @@ LIGHTING_SAMPLE_COUNT = 15  # Target number of frames to sample
 
 # Hook Analysis Configuration
 HOOK_DURATION = 3
+
+# YouTube Data API Config
+import os
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")  # Loads from env if set, else fallback
 HOOK_MIN_MOTION = 0.3
 
 # Subject Presentation Analysis

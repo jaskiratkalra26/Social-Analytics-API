@@ -14,3 +14,6 @@ fastapi
 uvicorn
 python-multipart
 open_clip_torch
+pytrends
+redis
+python-dotenv

@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 import Config
 from pipeline import video_loader, frame_extractor, audio_extractor, scene_detector
+from pipeline.trend_builder import get_trend_from_redis
 from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation, viral_analysis, audio_analysis
 from analysis.storytelling_clarity import compute_storytelling_clarity
 from features import popular_hashtags, visual_features, audio_features
@@ -232,6 +233,86 @@ def analyze_video(video_path: str) -> dict:
 
     # Platform Recommendation & Hashtags
     logger.info("Running Platform Recommendation & Hashtag Generation...")
+    
+    # --- TREND ALIGNMENT CHECK ---
+    logger.info("Checking Trend Alignment...")
+    try:
+        # Fetch trend data from Redis (or fallback to defaults)
+        trend_data = get_trend_from_redis()
+        
+        trend_info = {
+            "status": "not_trending",
+            "description": "Trend data unavailable or video category unknown.",
+            "rank": None,
+            "trend_category": None,
+            "trend_score": 0.0,
+            "trending_keywords": []
+        }
+        
+        if trend_data and "top_categories" in trend_data:
+            predicted_niche = results.get("content_classification", {}).get("predicted_label", None)
+            
+            if predicted_niche:
+                matched_category = None
+                matched_rank = None
+                pred_clean = predicted_niche.lower().strip()
+                
+                # Try finding a match
+                for rank_idx, category in enumerate(trend_data.get("top_categories", []), 1):
+                    cat_name = category["category"].lower().strip()
+                    cat_words = set(cat_name.split())
+                    
+                    is_match = False
+                    
+                    # 1. Exact or Substring match
+                    if pred_clean == cat_name or pred_clean in cat_name or cat_name in pred_clean:
+                        is_match = True
+                        
+                    # 2. Word intersection
+                    if not is_match and pred_clean in cat_words:
+                         is_match = True
+                    
+                    # 3. Specific Aliases
+                    aliases = {
+                        "technology": ["science", "computing", "gaming"],
+                        "gaming": ["technology", "entertainment"],
+                        "entertainment": ["movies", "tv", "comedy", "music"],
+                        "movies": ["entertainment", "film"],
+                        "music": ["entertainment"]
+                    }
+                    if not is_match and pred_clean in aliases:
+                        if any(alias in cat_name for alias in aliases[pred_clean]):
+                            is_match = True
+
+                    if is_match:
+                        matched_category = category
+                        matched_rank = rank_idx
+                        break
+
+                if matched_category:
+                    trend_info = {
+                        "status": "active_trend",
+                        "description": f"The category '{matched_category['category']}' is currently trending #{matched_rank} on YouTube.",
+                        "rank": matched_rank,
+                        "trend_category": matched_category["category"],
+                        "trend_score": matched_category["score"],
+                        "trending_keywords": matched_category["keywords"][:5] # Top 5 trending titles/keywords
+                    }
+                else:
+                     trend_info["status"] = "niche_content"
+                     trend_info["description"] = f"Topic '{predicted_niche}' is not currently in the top 3 trends."
+                     trend_info["trend_category"] = predicted_niche
+            else:
+                trend_info["description"] = "Could not predict video category to compare with trends."
+        else:
+            trend_info["description"] = "Trend data unavailable in Redis (run pipeline.trend_builder first)."
+            
+        results["trend_alignment"] = trend_info
+        
+    except Exception as e:
+        logger.error(f"Trend alignment error: {e}")
+        results["trend_alignment"] = {"error": str(e)}
+
     try:
         # Prepare features for recommendation
         video_features = {
