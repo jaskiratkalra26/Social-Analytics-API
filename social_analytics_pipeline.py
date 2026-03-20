@@ -3,16 +3,20 @@ import sys
 import json
 import logging
 import time
+import numpy as np
+import redis
 import concurrent.futures
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 import Config
+from Config import SUBCATEGORY_IDS
 from pipeline import video_loader, frame_extractor, audio_extractor, scene_detector
 from pipeline.trend_builder import get_trend_from_redis
 from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation, viral_analysis, audio_analysis
 from analysis.storytelling_clarity import compute_storytelling_clarity
+from analysis.subcategory_classification import get_subcategory
 from features import popular_hashtags, visual_features, audio_features
 
 # Configure Logging
@@ -77,6 +81,7 @@ def analyze_video(video_path: str) -> dict:
         "text_analysis": {},
         "audio_analysis": {},
         "content_classification": {},
+        "subcategory": {},
         "subject_presentation": {},
         "storytelling_clarity": {},
         "platform_recommendation": {},
@@ -141,9 +146,8 @@ def analyze_video(video_path: str) -> dict:
     # --- STAGE 2: Analysis Modules (Parallel) ---
     logger.info("Starting analysis phase...")
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=7) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         # Pass frames_list to all functions
-        future_hook = executor.submit(hook_analysis.analyze_hook, video_path, frame_folder, frames=frames_list, scenes=scene_list)
         future_pacing = executor.submit(pacing_analysis.analyze_pacing, video_path, frame_folder=frame_folder, frames=frames_list, scenes=scene_list)
         future_lighting = executor.submit(lighting_analysis.analyze_lighting, video_path, frame_folder=frame_folder, frames=frames_list)
         future_text = executor.submit(text_overlay_analysis.analyze_text_overlay, frame_folder, frames=frames_list)
@@ -153,12 +157,6 @@ def analyze_video(video_path: str) -> dict:
         
         # Collect results as they complete
 
-        try:
-            results["hook_analysis"] = future_hook.result()
-        except Exception as e:
-            logger.error(f"Hook analysis error: {e}")
-            results["hook_analysis"] = {"error": str(e)}
-            
         try:
             results["pacing_analysis"] = future_pacing.result()
         except Exception as e:
@@ -194,6 +192,88 @@ def analyze_video(video_path: str) -> dict:
         except Exception as e:
             logger.error(f"Subject presentation error: {e}")
             results["subject_presentation"] = {"error": str(e)}
+
+    # --- STAGE 2.5: Hook Analysis (Sequential) ---
+    logger.info("Running Hook Analysis (using cached text and audio metrics)...")
+    try:
+        # Pass text_analysis directly so it never runs duplicate OCR
+        results["hook_analysis"] = hook_analysis.analyze_hook(
+            video_path, 
+            frame_folder, 
+            frames=frames_list, 
+            scenes=scene_list, 
+            text_data=results.get("text_analysis")
+        )
+    except Exception as e:
+        logger.error(f"Hook analysis error: {e}")
+        results["hook_analysis"] = {"error": str(e)}
+
+    # --- SUBCATEGORY CLASSIFICATION & COMPETITION DATA ---
+    logger.info("Running Subcategory Classification & Fetching Competition Data...")
+    try:
+        predicted_category = results["content_classification"].get("predicted_label")
+        raw_embeddings     = results["content_classification"].get("video_embeddings")
+
+        if predicted_category and raw_embeddings is not None:
+            embeddings_np = np.array(raw_embeddings, dtype=np.float32)
+
+            # get_subcategory returns the readable name
+            subcat_name = get_subcategory(predicted_category, embeddings_np)
+            
+            # Look up the global integer ID (e.g., 65)
+            subcat_id = SUBCATEGORY_IDS.get(subcat_name) if subcat_name else None
+
+            results["subcategory"] = {
+                "name": subcat_name,
+                "id": subcat_id,
+            }
+            results["competition_data"] = {}
+            comp_data_found = False
+
+            if subcat_id is not None:
+                # 1. FAST REDIS FETCH (Exactly by ID)
+                try:
+                    redis_client = redis.from_url(os.getenv('REDIS_URL'), decode_responses=True)
+                    redis_key = f"competition:{subcat_id}"
+                    raw_comp = redis_client.get(redis_key)
+                    if raw_comp:
+                        results["competition_data"] = json.loads(raw_comp)
+                        comp_data_found = True
+                        logger.info(f"Loaded competition data directly from Redis -> {redis_key}")
+                except Exception as e:
+                    logger.warning(f"Failed to fetch from Redis, checking fallback: {e}")
+
+            # 2. FALLBACK JSON FETCH (Exactly by ID mapping)
+            if not comp_data_found and subcat_id is not None:
+                try:
+                    json_path = os.path.join(Config.OUTPUT_DIR, "competition_data.json")
+                    if os.path.exists(json_path):
+                        with open(json_path, 'r', encoding='utf-8') as f:
+                            fallback_data = json.load(f)
+
+                        # The new JSON format puts everything cleanly under 'data' using string id keys!
+                        item = fallback_data.get("data", {}).get(str(subcat_id))
+                        if item:
+                            results["competition_data"] = item
+                            comp_data_found = True
+                            logger.info(f"Loaded competition data from JSON fallback -> id: {subcat_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to load from JSON fallback: {e}")
+
+            if not comp_data_found:
+                logger.warning(f"Competition data not found for id: {subcat_id}")
+
+        else:
+            results["subcategory"] = {"name": None, "id": None}
+            results["competition_data"] = {}
+
+    except Exception as e:
+        logger.error(f"Subcategory classification error: {e}")
+        results["subcategory"] = {"error": str(e)}
+        results["competition_data"] = {}
+    finally:
+        # Always strip embeddings — they're internal, not part of the output
+        results["content_classification"].pop("video_embeddings", None)
 
     # --- Storytelling Clarity Analysis ---
     logger.info("Running Storytelling Clarity Analysis...")
@@ -274,8 +354,8 @@ def analyze_video(video_path: str) -> dict:
                     
                     # 3. Specific Aliases
                     aliases = {
-                        "technology": ["science", "computing", "gaming"],
-                        "gaming": ["technology", "entertainment"],
+                        "technology": ["science", "computing"],
+                        "gaming": ["entertainment"],
                         "entertainment": ["movies", "tv", "comedy", "music"],
                         "movies": ["entertainment", "film"],
                         "music": ["entertainment"]

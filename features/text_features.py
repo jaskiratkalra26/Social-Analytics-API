@@ -7,6 +7,7 @@ import json
 import easyocr
 import threading
 import torch
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add project root to sys.path to import Config
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -18,7 +19,6 @@ except ImportError:
 # Global Singleton for Reader
 _reader = None
 _reader_lock = threading.Lock()
-_ocr_processing_lock = threading.Lock()
 
 def get_reader():
     """Lazy initialization of EasyOCR Reader"""
@@ -33,6 +33,16 @@ def get_reader():
                 print(f"Warning: Failed to initialize EasyOCR: {e}")
                 _reader = None
     return _reader
+
+def _do_ocr(args):
+    """Helper function for ThreadPoolExecutor"""
+    idx, img_ocr, reader = args
+    try:
+        # reader.readtext releases the GIL, making it perfect for threads
+        res = reader.readtext(img_ocr) if reader else []
+        return idx, res
+    except Exception as e:
+        return idx, []
 
 def extract_text_features(frame_folder, verbose=False, frames=None):
     """
@@ -58,141 +68,169 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
             "context_clarity": 0.0, "hook_text_ratio": 0.0, "reading_speed": 0.0, "motion_score": 0.0
         }
 
-    with _ocr_processing_lock:
-        if frame_folder and os.path.exists(frame_folder):
-             # Double check cache
-             cache_path = os.path.join(frame_folder, "text_features_cache.json")
-             if os.path.exists(cache_path):
-                 try:
-                    with open(cache_path, 'r') as f: return json.load(f)
-                 except: pass
+    target_fps = getattr(Config, 'TARGET_FPS', 1.0)
+    hook_duration_sec = getattr(Config, 'HOOK_DURATION', 3.0)
+    hook_frames_limit = max(1, int(hook_duration_sec * target_fps))
 
-        sample_rate = getattr(Config, 'OCR_SAMPLE_RATE', 3)
-        sampled_indices = range(0, len(frames_to_process), sample_rate)
-        num_sampled = len(sampled_indices)
+    sample_rate = getattr(Config, 'OCR_SAMPLE_RATE', 3)
+    max_frames = getattr(Config, 'OCR_MAX_FRAMES', 60) # Max 60 frames to rescue massive videos
+
+    # 1. Guarantee EVERY frame of the actual hook is analyzed so we never miss instant hook text
+    hook_indices = list(range(0, min(len(frames_to_process), hook_frames_limit)))
+    
+    # 2. Sparsely sample the rest of the video
+    rest_indices = list(range(hook_frames_limit, len(frames_to_process), sample_rate))
+    
+    # 3. Apply the 20-minute video upper limit protective cap uniformly
+    if len(hook_indices) + len(rest_indices) > max_frames:
+        allowed_rest = max_frames - len(hook_indices)
+        if allowed_rest > 0:
+            step_size = len(rest_indices) / allowed_rest
+            rest_indices = [rest_indices[int(i * step_size)] for i in range(allowed_rest)]
+        else:
+            rest_indices = []
+
+    sampled_indices = hook_indices + rest_indices
+    num_sampled = len(sampled_indices)
+    
+    reader = get_reader()
+    print(f"Starting OCR on {num_sampled} frames using EasyOCR...")
+
+    # Phase 1: Sequential Pre-pass to identify identical frames
+    similarity_threshold = getattr(Config, 'OCR_SIMILARITY_THRESHOLD', 0.01)
+    prev_img_small = None
+    frame_cache = {}
+    tasks_to_run = []
+
+    for idx in sampled_indices:
+        item = frames_to_process[idx]
+        if isinstance(item, str):
+            img = cv2.imread(item)
+        else:
+            img = item
+            
+        if img is None: continue
         
-        frames_with_text_count = 0
-        total_characters_detected = 0
-        total_relative_box_area = 0.0
-        total_text_boxes_count = 0
-        total_words_count = 0
-        valid_words_count = 0
-        hook_frames_limit = getattr(Config, 'OCR_HOOK_FRAMES_LIMIT', 5)
-        hook_text_frames_count = 0
-        min_word_length = getattr(Config, 'OCR_MIN_WORD_LENGTH', 3)
+        height, width = img.shape[:2]
+        frame_area = float(width * height)
+        if frame_area == 0: continue
         
-        reading_speeds = []
-        prev_frame_words = set()
-        time_delta = sample_rate / getattr(Config, 'TARGET_FPS', 1.0)
-        safe_time_delta = max(0.1, time_delta)
+        frame_cache[idx] = {'area': frame_area, 'should_run_ocr': True}
+        
+        try:
+            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img_small = cv2.resize(img_gray, (64, 64))
+            
+            if prev_img_small is not None:
+                diff = np.mean(np.abs(img_small.astype("float32") - prev_img_small.astype("float32"))) / 255.0
+                if diff < similarity_threshold:
+                    frame_cache[idx]['should_run_ocr'] = False
+            
+            prev_img_small = img_small
+        except Exception:
+            pass
 
-        reader = get_reader()
-        print(f"Starting OCR on {num_sampled} frames using EasyOCR...")
-
-        # Optimization: Cache previous frame to skip processing static scenes
-        prev_img_small = None
-        prev_ocr_result = []
-        similarity_threshold = getattr(Config, 'OCR_SIMILARITY_THRESHOLD', 0.01)
-
-        for i, idx in enumerate(sampled_indices):
-            item = frames_to_process[idx]
-            if isinstance(item, str):
-                img = cv2.imread(item)
+        if frame_cache[idx]['should_run_ocr']:
+            if img.shape[1] > 800:
+                scale_ocr = 800 / img.shape[1]
+                img_ocr = cv2.resize(img, (800, int(img.shape[0] * scale_ocr)))
             else:
-                img = item # ndarray
+                img_ocr = img
+                
+            tasks_to_run.append((idx, img_ocr, reader))
+
+    # Phase 2: Concurrent OCR Inference
+    ocr_results = {}
+    if tasks_to_run:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {executor.submit(_do_ocr, t): t for t in tasks_to_run}
+            for future in as_completed(futures):
+                i_idx, res = future.result()
+                ocr_results[i_idx] = res
+
+    # Phase 3: Sequential processing of OCR results for temporal metrics
+    frames_with_text_count = 0
+    total_characters_detected = 0
+    total_relative_box_area = 0.0
+    total_text_boxes_count = 0
+    total_words_count = 0
+    valid_words_count = 0
+    hook_text_frames_count = 0
+    min_word_length = getattr(Config, 'OCR_MIN_WORD_LENGTH', 3)
+    
+    reading_speeds = []
+    prev_frame_words = set()
+    time_delta = sample_rate / target_fps
+    safe_time_delta = max(0.1, time_delta)
+    
+    prev_ocr_result = []
+
+    for idx in sampled_indices:
+        if idx not in frame_cache:
+            continue
             
-            if img is None: continue
+        fc = frame_cache[idx]
+        frame_area = fc['area']
+        
+        if fc['should_run_ocr']:
+            result = ocr_results.get(idx, [])
+            prev_ocr_result = result
+        else:
+            result = prev_ocr_result
             
-            height, width = img.shape[:2]
-            frame_area = float(width * height)
-            if frame_area == 0: continue
+        has_valid_text = False
+        frame_char_count = 0
+        current_frame_words = set()
 
-            # Check visual similarity to previous frame to skip redundant OCR
-            should_run_ocr = True
-            try:
-                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                img_small = cv2.resize(img_gray, (64, 64))
-                
-                if prev_img_small is not None:
-                     diff = np.mean(np.abs(img_small.astype("float32") - prev_img_small.astype("float32"))) / 255.0
-                     if diff < similarity_threshold:
-                         should_run_ocr = False
-                
-                prev_img_small = img_small
-            except Exception:
-                should_run_ocr = True
-
-            try:
-                if not should_run_ocr:
-                    result = prev_ocr_result
-                else:
-                    # Downscale again for OCR if needed (very large frames are slow)
-                    # target width 640-800 is usually optimal for EasyOCR
-                    if img.shape[1] > 800:
-                        scale_ocr = 800 / img.shape[1]
-                        img_ocr = cv2.resize(img, (800, int(img.shape[0] * scale_ocr)))
-                    else:
-                        img_ocr = img
-
-                    result = reader.readtext(img_ocr) if reader else []
-                    prev_ocr_result = result
-            except Exception as e:
-                if verbose: print(f"OCR Error: {e}")
-                result = []
-
-            has_valid_text = False
-            frame_char_count = 0
-            current_frame_words = set()
-
-            for (bbox, text, prob) in result:
-                if prob < 0.4: continue
-                clean_text = text.strip()
-                if not clean_text: continue
-                
-                has_valid_text = True
-                frame_char_count += len(clean_text)
-                
-                (tl, tr, br, bl) = bbox
-                box_w = np.linalg.norm(np.array(tr) - np.array(tl))
-                box_h = np.linalg.norm(np.array(bl) - np.array(tl))
-                total_relative_box_area += ((box_w * box_h) / frame_area)
-                total_text_boxes_count += 1
-                
-                for w in clean_text.split():
-                    w_lower = w.lower()
-                    current_frame_words.add(w_lower)
-                    total_words_count += 1
-                    if len(w) >= min_word_length:
-                        valid_words_count += 1
-
-            if has_valid_text:
-                frames_with_text_count += 1
-                total_characters_detected += frame_char_count
-                if idx < hook_frames_limit:
-                    hook_text_frames_count += 1
+        for (bbox, text, prob) in result:
+            if prob < 0.4: continue
+            clean_text = text.strip()
+            if not clean_text: continue
             
-            new_words = len(current_frame_words - prev_frame_words)
-            if new_words > 0:
-                reading_speeds.append((new_words / safe_time_delta) * 60)
-            prev_frame_words = current_frame_words
-
-        # Results
-        res = {
-            "text_presence_ratio": frames_with_text_count / num_sampled if num_sampled else 0,
-            "text_density": total_characters_detected / num_sampled if num_sampled else 0,
-            "font_size_score": min(100, ((total_relative_box_area / total_text_boxes_count) / 0.10 * 100) if total_text_boxes_count else 0),
-            "context_clarity": valid_words_count / total_words_count if total_words_count else 0,
-            "hook_text_ratio": hook_text_frames_count / sum(1 for x in sampled_indices if x < hook_frames_limit) if any(x < hook_frames_limit for x in sampled_indices) else 0,
-            "reading_speed": float(np.mean(reading_speeds)) if reading_speeds else 0.0,
-            "motion_score": 0.0 
-        }
-
-        if frame_folder and os.path.exists(frame_folder):
-             # Ensure cache path logic is sound
-             try:
-                cache_path = os.path.join(frame_folder, "text_features_cache.json")
-                with open(cache_path, 'w') as f: json.dump(res, f)
-             except: pass
+            has_valid_text = True
+            frame_char_count += len(clean_text)
             
-        return res
+            (tl, tr, br, bl) = bbox
+            # OPTIMISED MATH: direct absolute differences instead of np array instantiations
+            box_w = abs(tr[0] - tl[0])
+            box_h = abs(bl[1] - tl[1])
+            total_relative_box_area += ((box_w * box_h) / frame_area)
+            total_text_boxes_count += 1
+            
+            for w in clean_text.split():
+                w_lower = w.lower()
+                current_frame_words.add(w_lower)
+                total_words_count += 1
+                if len(w) >= min_word_length:
+                    valid_words_count += 1
+
+        if has_valid_text:
+            frames_with_text_count += 1
+            total_characters_detected += frame_char_count
+            if idx < hook_frames_limit:
+                hook_text_frames_count += 1
+        
+        new_words = len(current_frame_words - prev_frame_words)
+        if new_words > 0:
+            reading_speeds.append((new_words / safe_time_delta) * 60)
+        prev_frame_words = current_frame_words
+
+    # Results Formulation
+    res = {
+        "text_presence_ratio": frames_with_text_count / num_sampled if num_sampled else 0,
+        "text_density": total_characters_detected / num_sampled if num_sampled else 0,
+        "font_size_score": min(100, ((total_relative_box_area / total_text_boxes_count) / 0.10 * 100) if total_text_boxes_count else 0),
+        "context_clarity": valid_words_count / total_words_count if total_words_count else 0,
+        "hook_text_ratio": hook_text_frames_count / sum(1 for x in sampled_indices if x < hook_frames_limit) if any(x < hook_frames_limit for x in sampled_indices) else 0,
+        "reading_speed": float(np.mean(reading_speeds)) if reading_speeds else 0.0,
+        "motion_score": 0.0 
+    }
+
+    if frame_folder and os.path.exists(frame_folder):
+         try:
+            cache_path = os.path.join(frame_folder, "text_features_cache.json")
+            with open(cache_path, 'w') as f: json.dump(res, f)
+         except: pass
+        
+    return res
 

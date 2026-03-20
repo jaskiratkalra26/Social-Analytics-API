@@ -186,7 +186,8 @@ def analyze_content(video_path: str, frame_folder: str, frames: list = None):
         results.append({"label": label, "score": score})
     
     final_output = {
-        "predicted_label": results[0]["label"] if results else "Unknown"
+        "predicted_label": results[0]["label"] if results else "Unknown",
+        "video_embeddings": avg_embedding.tolist()  # list for JSON cache compatibility
     }
     
     # Cache

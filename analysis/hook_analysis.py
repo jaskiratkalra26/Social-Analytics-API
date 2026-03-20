@@ -10,7 +10,7 @@ import Config
 from features import visual_features, text_features, audio_features
 from pipeline import scene_detector, video_loader
 
-def analyze_hook(video_path: str, frame_folder: str, frames: list = None, scenes: list = None) -> dict:
+def analyze_hook(video_path: str, frame_folder: str, frames: list = None, scenes: list = None, text_data: dict = None) -> dict:
     """
     Analyzes the hook (first 3 seconds) of a video.
     Returns hook score and insights.
@@ -19,6 +19,8 @@ def analyze_hook(video_path: str, frame_folder: str, frames: list = None, scenes
         video_path (str): Path to the input video.
         frame_folder (str): Folder containing extracted frames from the video.
         frames (list, optional): List of loaded frames to use instead of reading from disk.
+        scenes (list, optional): Precomputed scene list.
+        text_data (dict, optional): Precomputed text_overlay_analysis result to skip redundant OCR.
         
     Returns:
         dict: Hook analysis result containing score, category, issues, and metrics.
@@ -65,9 +67,14 @@ def analyze_hook(video_path: str, frame_folder: str, frames: list = None, scenes
 
     # 4. Text Features (Hook Text Ratio)
     try:
-        # Pass frames list to extract_text_features
-        text_data = text_features.extract_text_features(frame_folder, frames=frames)
-        hook_text_ratio = text_data.get("hook_text_ratio", 0.0)
+        # Use pre-computed text_data to skip redundant OCR if provided
+        if text_data is None:
+            ocr_metrics_data = text_features.extract_text_features(frame_folder, frames=frames)
+        else:
+            # Handle if the dict passed in is the wrapped text_overlay_analysis format
+            ocr_metrics_data = text_data.get("text_metrics", text_data)
+        
+        hook_text_ratio = ocr_metrics_data.get("hook_text_ratio", 0.0)
     except Exception as e:
         print(f"Error extracting text features: {e}")
         hook_text_ratio = 0.0

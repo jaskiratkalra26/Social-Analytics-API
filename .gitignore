@@ -18,6 +18,8 @@ venv.bak/
 
 # Project Specific - Generated files and folders
 output/
+!output/competition_data.json
+!output/trend_data.json
 temp_uploads/
 
 # Logs

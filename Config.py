@@ -260,3 +260,89 @@ AUDIO_THRESH_ENERGY_LOW = 0.05
 AUDIO_THRESH_CLARITY_LOW = 0.5
 AUDIO_THRESH_HOOK_LOW = 0.05
 AUDIO_THRESH_SPEC_LOW = 0.1
+
+
+# Subcategory ID Lookup
+# Key   → actual subcategory name (from cluster_interpretations in pickle)
+# Value → unique sequential integer ID (1–59)
+SUBCATEGORY_IDS = {
+    # beauty (1–5)
+    "Skincare & Cosmetics Products":                    1,
+    "Affordable & Professional Makeup Techniques":      2,
+    "Indian & Social Media Makeup Trends":              3,
+    "Beauty Horoscopes & E-commerce":                   4,
+    "Nature-Inspired Beauty & Scenery":                 5,
+    # comedy (6–7)
+    "Viral Comedy Shorts & New Content":                6,
+    "Relatable POV Skits & Social Media Memes":         7,
+    # cooking (8–12)
+    "Restaurant-Style Dinner Recipes":                  8,
+    "Fun Foodie Shorts & Chicken Recipes":              9,
+    "Trending Tasty Finds & Seafood":                  10,
+    "Breakfast Vlogs & Creative Treats":               11,
+    "Quick & Healthy Recipes":                         12,
+    # education (13–20)
+    "Personal Growth & Business Motivation":           13,
+    "Psychological Facts & Quotes":                    14,
+    "General Knowledge & History Facts":               15,
+    "Tech Tools & Smart Gadgets":                      16,
+    "Exam Prep (GK) & Motivation":                     17,
+    "Science Projects & School Activities":            18,
+    "English Language Learning":                       19,
+    "Higher Education & Career Guidance":              20,
+    # finance (21–25)
+    "Professional & Personal Motivation":              21,
+    "Wealth Building & Personal Income":               22,
+    "Financial Literacy & Educational Resources":      23,
+    "Stock Market Trading & Analysis":                 24,
+    "Strategic Investing & Common Pitfalls":           25,
+    # fitness (26–31)
+    "Dance, Martial Arts & Rhythmic Exercise":         26,
+    "Mixed Casual Fitness & Funny Content":            27,
+    "Running, Sports & Outdoor Fitness":               28,
+    "Gym Transformations & Evolution":                 29,
+    "Heavy Strength Training & Bodybuilding":          30,
+    "Desi Fitness & Calisthenics Challenges":          31,
+    # music (32–37)
+    "AI/Curated Music & Call to Action":               32,
+    "Viral Dance & Short Music Videos":                33,
+    "Ringtones & Status Videos (Mixed Language)":      34,
+    "New Rap & Dance Music":                           35,
+    "Live Music & Guitar Tutorials":                   36,
+    "Telugu/Hindi Ringtones & Status":                 37,
+    # news (38–42)
+    "Motivational Quotes & Educational Inspiration":   38,
+    "International Relations & Policy News":           39,
+    "Sports News & Cricket Updates":                   40,
+    "Social Stories & Human Interest Clips":           41,
+    "Breaking News & Top Regional Headlines":          42,
+    # sports (43–47)
+    "Badminton & Racket Sports":                       43,
+    "International Sports Highlights (Cricket)":       44,
+    "Motivation & Combat Sports Training":             45,
+    "Casual Team Sports & Social Media Trends":        46,
+    "North American Collegiate & Ice Hockey":          47,
+    # tech (48–53)
+    "Mobile Ecosystems & OS":                          48,
+    "Viral Gadgets & Gadget Compilations":             49,
+    "Flagship Devices & Consumer Tech":                50,
+    "Industrial Tech & Creative Engineering":          51,
+    "AI & Future Technology":                          52,
+    "Tech Education & Productivity Tools":             53,
+    # travel (54–59)
+    "Urban Views & International Cities":              54,
+    "Nature Landscapes & Rail Travel":                 55,
+    "Cultural Sites & Solo Exploration":               56,
+    "Scenic Destinations & Beautiful Places":          57,
+    "Travel Entertainment & Novelty Content":          58,
+    "Romantic European Getaways":                      59,
+    # gaming (60–67)
+    "Minecraft Content":                                       60,
+    "Competitive Shooters (Fortnite, Valorant, Freefire)":     61,
+    "DOP Game Challenges & Puzzle Solutions":                  62,
+    "Viral Gaming Content (Social Media Style)":               63,
+    "Roblox War & Gameplay":                                   64,
+    "Mobile Gaming Shorts & Horror":                           65,
+    "GTA, Valorant, and Indian Driving Games":                 66,
+    "Diverse Roblox & Meme-centric Gameplay":                  67,
+}
