@@ -1,0 +1,877 @@
+{
+    "generated_at": "2026-03-20T07:19:04.855638+00:00",
+    "total": 67,
+    "data": {
+        "1": {
+            "subcategory_id": 0,
+            "name": "Skincare & Cosmetics Products",
+            "competition_score": 0.147,
+            "competition_level": "High",
+            "top_keywords": [
+                "skin",
+                "trimmer",
+                "cream"
+            ],
+            "last_updated": "2026-03-19T17:48:26.095781+00:00",
+            "id": 1
+        },
+        "10": {
+            "subcategory_id": 2,
+            "name": "Trending Tasty Finds & Seafood",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "viralvideo",
+                "youtube",
+                "ki"
+            ],
+            "last_updated": "2026-03-19T17:49:16.478570+00:00",
+            "id": 10
+        },
+        "11": {
+            "subcategory_id": 3,
+            "name": "Breakfast Vlogs & Creative Treats",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "breakfast",
+                "vlog",
+                "yt"
+            ],
+            "last_updated": "2026-03-19T17:49:22.420401+00:00",
+            "id": 11
+        },
+        "12": {
+            "subcategory_id": 5,
+            "name": "Quick & Healthy Recipes",
+            "competition_score": 0.835,
+            "competition_level": "Low",
+            "top_keywords": [
+                "recipes",
+                "healthy",
+                "breakfast"
+            ],
+            "last_updated": "2026-03-19T17:49:27.907980+00:00",
+            "id": 12
+        },
+        "13": {
+            "subcategory_id": 0,
+            "name": "Personal Growth & Business Motivation",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "best",
+                "video",
+                "motivation"
+            ],
+            "last_updated": "2026-03-19T17:49:33.578048+00:00",
+            "id": 13
+        },
+        "14": {
+            "subcategory_id": 1,
+            "name": "Psychological Facts & Quotes",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "fact",
+                "day",
+                "daily"
+            ],
+            "last_updated": "2026-03-19T17:49:39.006462+00:00",
+            "id": 14
+        },
+        "15": {
+            "subcategory_id": 2,
+            "name": "General Knowledge & History Facts",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "facts",
+                "best",
+                "new"
+            ],
+            "last_updated": "2026-03-19T17:49:44.841048+00:00",
+            "id": 15
+        },
+        "16": {
+            "subcategory_id": 3,
+            "name": "Tech Tools & Smart Gadgets",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "top",
+                "shortsfeed",
+                "viralshorts"
+            ],
+            "last_updated": "2026-03-19T17:49:50.571042+00:00",
+            "id": 16
+        },
+        "17": {
+            "subcategory_id": 4,
+            "name": "Exam Prep (GK) & Motivation",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "video",
+                "new",
+                "best"
+            ],
+            "last_updated": "2026-03-19T17:49:55.901416+00:00",
+            "id": 17
+        },
+        "18": {
+            "subcategory_id": 5,
+            "name": "Science Projects & School Activities",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "trending",
+                "best",
+                "video"
+            ],
+            "last_updated": "2026-03-19T17:50:01.444530+00:00",
+            "id": 18
+        },
+        "19": {
+            "subcategory_id": 6,
+            "name": "English Language Learning",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "english",
+                "englishgrammar",
+                "trending"
+            ],
+            "last_updated": "2026-03-19T17:50:08.080247+00:00",
+            "id": 19
+        },
+        "2": {
+            "subcategory_id": 1,
+            "name": "Affordable & Professional Makeup Techniques",
+            "competition_score": 0.52,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "lashlift",
+                "lipstick",
+                "matte"
+            ],
+            "last_updated": "2026-03-19T17:48:31.317436+00:00",
+            "id": 2
+        },
+        "20": {
+            "subcategory_id": 7,
+            "name": "Higher Education & Career Guidance",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "best",
+                "trending",
+                "top"
+            ],
+            "last_updated": "2026-03-19T17:50:14.110982+00:00",
+            "id": 20
+        },
+        "21": {
+            "subcategory_id": 0,
+            "name": "Professional & Personal Motivation",
+            "competition_score": 0.8,
+            "competition_level": "Low",
+            "top_keywords": [
+                "motivation",
+                "best",
+                "success"
+            ],
+            "last_updated": "2026-03-19T17:50:19.391349+00:00",
+            "id": 21
+        },
+        "22": {
+            "subcategory_id": 1,
+            "name": "Wealth Building & Personal Income",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "best",
+                "top",
+                "new"
+            ],
+            "last_updated": "2026-03-19T17:50:24.980534+00:00",
+            "id": 22
+        },
+        "23": {
+            "subcategory_id": 2,
+            "name": "Financial Literacy & Educational Resources",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "best",
+                "books",
+                "personal"
+            ],
+            "last_updated": "2026-03-19T17:50:29.624188+00:00",
+            "id": 23
+        },
+        "24": {
+            "subcategory_id": 3,
+            "name": "Stock Market Trading & Analysis",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "stockmarket",
+                "best",
+                "analysis"
+            ],
+            "last_updated": "2026-03-19T17:50:33.893238+00:00",
+            "id": 24
+        },
+        "25": {
+            "subcategory_id": 4,
+            "name": "Strategic Investing & Common Pitfalls",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "investment",
+                "best",
+                "viralvideo"
+            ],
+            "last_updated": "2026-03-19T17:50:37.878079+00:00",
+            "id": 25
+        },
+        "26": {
+            "subcategory_id": 0,
+            "name": "Dance, Martial Arts & Rhythmic Exercise",
+            "competition_score": 0.583,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "dance",
+                "motivation",
+                "reels"
+            ],
+            "last_updated": "2026-03-19T17:57:08.227815+00:00",
+            "id": 26
+        },
+        "27": {
+            "subcategory_id": 1,
+            "name": "Mixed Casual Fitness & Funny Content",
+            "competition_score": 0.375,
+            "competition_level": "High",
+            "top_keywords": [
+                "motivation",
+                "funny",
+                "running"
+            ],
+            "last_updated": "2026-03-19T17:57:13.347132+00:00",
+            "id": 27
+        },
+        "28": {
+            "subcategory_id": 2,
+            "name": "Running, Sports & Outdoor Fitness",
+            "competition_score": 0.5438,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "running",
+                "men",
+                "sports"
+            ],
+            "last_updated": "2026-03-19T18:10:05.472866+00:00",
+            "id": 28
+        },
+        "29": {
+            "subcategory_id": 3,
+            "name": "Gym Transformations & Evolution",
+            "competition_score": 0.1553,
+            "competition_level": "High",
+            "top_keywords": [
+                "evolution",
+                "power",
+                "transformation"
+            ],
+            "last_updated": "2026-03-19T18:10:10.455869+00:00",
+            "id": 29
+        },
+        "3": {
+            "subcategory_id": 2,
+            "name": "Indian & Social Media Makeup Trends",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "lipstick",
+                "swiss",
+                "fyp"
+            ],
+            "last_updated": "2026-03-19T17:48:36.229866+00:00",
+            "id": 3
+        },
+        "30": {
+            "subcategory_id": 4,
+            "name": "Heavy Strength Training & Bodybuilding",
+            "competition_score": 0.0845,
+            "competition_level": "High",
+            "top_keywords": [
+                "motivation",
+                "chest",
+                "bodybuilding"
+            ],
+            "last_updated": "2026-03-19T18:10:15.270748+00:00",
+            "id": 30
+        },
+        "31": {
+            "subcategory_id": 5,
+            "name": "Desi Fitness & Calisthenics Challenges",
+            "competition_score": 0.147,
+            "competition_level": "High",
+            "top_keywords": [
+                "motivation",
+                "desi",
+                "calisthenics"
+            ],
+            "last_updated": "2026-03-19T17:57:34.342078+00:00",
+            "id": 31
+        },
+        "32": {
+            "subcategory_id": 0,
+            "name": "AI/Curated Music & Call to Action",
+            "competition_score": 0.332,
+            "competition_level": "High",
+            "top_keywords": [
+                "order",
+                "contact",
+                "wh"
+            ],
+            "last_updated": "2026-03-19T17:57:39.457318+00:00",
+            "id": 32
+        },
+        "33": {
+            "subcategory_id": 1,
+            "name": "Viral Dance & Short Music Videos",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "dance",
+                "love",
+                "viralvideo"
+            ],
+            "last_updated": "2026-03-19T17:57:44.269648+00:00",
+            "id": 33
+        },
+        "34": {
+            "subcategory_id": 2,
+            "name": "Ringtones & Status Videos (Mixed Language)",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "ringtone",
+                "best",
+                "status"
+            ],
+            "last_updated": "2026-03-19T17:57:49.315869+00:00",
+            "id": 34
+        },
+        "35": {
+            "subcategory_id": 3,
+            "name": "New Rap & Dance Music",
+            "competition_score": 0.992,
+            "competition_level": "Low",
+            "top_keywords": [
+                "newmusic",
+                "dance",
+                "rap"
+            ],
+            "last_updated": "2026-03-19T17:57:54.313095+00:00",
+            "id": 35
+        },
+        "36": {
+            "subcategory_id": 4,
+            "name": "Live Music & Guitar Tutorials",
+            "competition_score": 0.755,
+            "competition_level": "Low",
+            "top_keywords": [
+                "live",
+                "concert",
+                "guitar"
+            ],
+            "last_updated": "2026-03-19T17:57:58.877901+00:00",
+            "id": 36
+        },
+        "37": {
+            "subcategory_id": 5,
+            "name": "Telugu/Hindi Ringtones & Status",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "ringtone",
+                "new",
+                "love"
+            ],
+            "last_updated": "2026-03-19T17:58:03.572328+00:00",
+            "id": 37
+        },
+        "38": {
+            "subcategory_id": 0,
+            "name": "Motivational Quotes & Educational Inspiration",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "new",
+                "shortvideo",
+                "top"
+            ],
+            "last_updated": "2026-03-19T17:58:08.353970+00:00",
+            "id": 38
+        },
+        "39": {
+            "subcategory_id": 1,
+            "name": "International Relations & Policy News",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "new",
+                "trump",
+                "top"
+            ],
+            "last_updated": "2026-03-19T17:58:12.990898+00:00",
+            "id": 39
+        },
+        "4": {
+            "subcategory_id": 3,
+            "name": "Beauty Horoscopes & E-commerce",
+            "competition_score": 0.156,
+            "competition_level": "High",
+            "top_keywords": [
+                "horoscope",
+                "nykaa",
+                "know"
+            ],
+            "last_updated": "2026-03-19T17:48:42.058715+00:00",
+            "id": 4
+        },
+        "40": {
+            "subcategory_id": 2,
+            "name": "Sports News & Cricket Updates",
+            "competition_score": 0.886,
+            "competition_level": "Low",
+            "top_keywords": [
+                "ipl",
+                "men",
+                "final"
+            ],
+            "last_updated": "2026-03-19T17:58:17.500230+00:00",
+            "id": 40
+        },
+        "41": {
+            "subcategory_id": 3,
+            "name": "Social Stories & Human Interest Clips",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "new",
+                "respect",
+                "kindness"
+            ],
+            "last_updated": "2026-03-19T17:58:21.945902+00:00",
+            "id": 41
+        },
+        "42": {
+            "subcategory_id": 4,
+            "name": "Breaking News & Top Regional Headlines",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "new",
+                "top",
+                "breakingnews"
+            ],
+            "last_updated": "2026-03-19T17:58:26.576672+00:00",
+            "id": 42
+        },
+        "43": {
+            "subcategory_id": 0,
+            "name": "Badminton & Racket Sports",
+            "competition_score": 0.213,
+            "competition_level": "High",
+            "top_keywords": [
+                "badminton",
+                "brian",
+                "yang"
+            ],
+            "last_updated": "2026-03-19T17:58:31.430989+00:00",
+            "id": 43
+        },
+        "44": {
+            "subcategory_id": 1,
+            "name": "International Sports Highlights (Cricket & Football)",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "ipl",
+                "compilation",
+                "ronaldo"
+            ],
+            "last_updated": "2026-03-19T17:58:38.078508+00:00",
+            "id": 44
+        },
+        "45": {
+            "subcategory_id": 2,
+            "name": "Motivation & Combat Sports Training",
+            "competition_score": 0.207,
+            "competition_level": "High",
+            "top_keywords": [
+                "motivation",
+                "boxing",
+                "sport"
+            ],
+            "last_updated": "2026-03-19T17:58:44.728061+00:00",
+            "id": 45
+        },
+        "46": {
+            "subcategory_id": 3,
+            "name": "Casual Team Sports & Social Media Trends",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "volleyball",
+                "badminton",
+                "ball"
+            ],
+            "last_updated": "2026-03-19T17:58:49.325697+00:00",
+            "id": 46
+        },
+        "47": {
+            "subcategory_id": 4,
+            "name": "North American Collegiate & Ice Hockey",
+            "competition_score": 0.602,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "collegefootball",
+                "easports",
+                "fyp"
+            ],
+            "last_updated": "2026-03-19T17:58:54.118566+00:00",
+            "id": 47
+        },
+        "48": {
+            "subcategory_id": 0,
+            "name": "Mobile Ecosystems & OS",
+            "competition_score": 0.533,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "vivo",
+                "ios",
+                "one"
+            ],
+            "last_updated": "2026-03-19T17:58:58.816785+00:00",
+            "id": 48
+        },
+        "49": {
+            "subcategory_id": 1,
+            "name": "Viral Gadgets & Gadget Compilations",
+            "competition_score": 0.439,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "versatile",
+                "tiktok",
+                "compilation"
+            ],
+            "last_updated": "2026-03-19T17:59:03.353449+00:00",
+            "id": 49
+        },
+        "5": {
+            "subcategory_id": 4,
+            "name": "Nature-Inspired Beauty & Scenery",
+            "competition_score": 0.295,
+            "competition_level": "High",
+            "top_keywords": [
+                "nature",
+                "beautiful",
+                "natural"
+            ],
+            "last_updated": "2026-03-19T17:48:47.599453+00:00",
+            "id": 5
+        },
+        "50": {
+            "subcategory_id": 2,
+            "name": "Flagship Devices & Consumer Tech",
+            "competition_score": 0.912,
+            "competition_level": "Low",
+            "top_keywords": [
+                "super",
+                "apple",
+                "tiktok"
+            ],
+            "last_updated": "2026-03-19T17:59:07.770925+00:00",
+            "id": 50
+        },
+        "51": {
+            "subcategory_id": 3,
+            "name": "Industrial Tech & Creative Engineering",
+            "competition_score": 0.66,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "amazing",
+                "machine",
+                "cutting"
+            ],
+            "last_updated": "2026-03-19T17:59:13.265794+00:00",
+            "id": 51
+        },
+        "52": {
+            "subcategory_id": 4,
+            "name": "AI & Future Technology",
+            "competition_score": 0.467,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "ai",
+                "facts",
+                "future"
+            ],
+            "last_updated": "2026-03-19T17:59:17.859330+00:00",
+            "id": 52
+        },
+        "53": {
+            "subcategory_id": 5,
+            "name": "Tech Education & Productivity Tools",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "learning",
+                "tools",
+                "shortsfeed"
+            ],
+            "last_updated": "2026-03-19T17:59:22.982924+00:00",
+            "id": 53
+        },
+        "54": {
+            "subcategory_id": 0,
+            "name": "Urban Views & International Cities",
+            "competition_score": 0.492,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "view",
+                "shortvideo",
+                "train"
+            ],
+            "last_updated": "2026-03-19T17:59:28.204387+00:00",
+            "id": 54
+        },
+        "55": {
+            "subcategory_id": 1,
+            "name": "Nature Landscapes & Rail Travel",
+            "competition_score": 0.252,
+            "competition_level": "High",
+            "top_keywords": [
+                "nature",
+                "vline",
+                "love"
+            ],
+            "last_updated": "2026-03-19T17:59:33.266353+00:00",
+            "id": 55
+        },
+        "56": {
+            "subcategory_id": 2,
+            "name": "Cultural Sites & Solo Exploration",
+            "competition_score": 0.983,
+            "competition_level": "Low",
+            "top_keywords": [
+                "love",
+                "temple",
+                "japan"
+            ],
+            "last_updated": "2026-03-19T17:59:38.244269+00:00",
+            "id": 56
+        },
+        "57": {
+            "subcategory_id": 3,
+            "name": "Scenic Destinations & Beautiful Places",
+            "competition_score": 0.239,
+            "competition_level": "High",
+            "top_keywords": [
+                "nature",
+                "beautiful",
+                "places"
+            ],
+            "last_updated": "2026-03-19T17:59:43.158489+00:00",
+            "id": 57
+        },
+        "58": {
+            "subcategory_id": 4,
+            "name": "Travel Entertainment & Novelty Content",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "magic",
+                "ball",
+                "time"
+            ],
+            "last_updated": "2026-03-19T17:59:47.970125+00:00",
+            "id": 58
+        },
+        "59": {
+            "subcategory_id": 5,
+            "name": "Romantic European Getaways",
+            "competition_score": 0.6701,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "paris",
+                "love",
+                "shortsvideo"
+            ],
+            "last_updated": "2026-03-19T18:10:31.905128+00:00",
+            "id": 59
+        },
+        "6": {
+            "subcategory_id": 0,
+            "name": "Viral Comedy Shorts & New Content",
+            "competition_score": 0.977,
+            "competition_level": "Low",
+            "top_keywords": [
+                "comedyshorts",
+                "shortsfeed",
+                "viralvideo"
+            ],
+            "last_updated": "2026-03-19T17:48:53.093943+00:00",
+            "id": 6
+        },
+        "60": {
+            "id": 60,
+            "subcategory_id": 0,
+            "name": "Minecraft Content",
+            "competition_score": 0.399,
+            "competition_level": "High",
+            "top_keywords": [
+                "minecraft",
+                "cobblemon",
+                "guess"
+            ],
+            "last_updated": "2026-03-20T06:23:10.876965+00:00"
+        },
+        "61": {
+            "id": 61,
+            "subcategory_id": 1,
+            "name": "Competitive Shooters (Fortnite, Valorant, Freefire)",
+            "competition_score": 0.6296,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "fire",
+                "fortnite",
+                "valorant"
+            ],
+            "last_updated": "2026-03-20T06:23:16.088672+00:00"
+        },
+        "62": {
+            "id": 62,
+            "subcategory_id": 2,
+            "name": "DOP Game Challenges & Puzzle Solutions",
+            "competition_score": 0.468,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "dop",
+                "deleted",
+                "shortsfeed"
+            ],
+            "last_updated": "2026-03-20T06:23:21.633695+00:00"
+        },
+        "63": {
+            "id": 63,
+            "subcategory_id": 3,
+            "name": "Viral Gaming Content (Social Media Style)",
+            "competition_score": 0.3248,
+            "competition_level": "High",
+            "top_keywords": [
+                "bhai",
+                "viralvideo",
+                "aije"
+            ],
+            "last_updated": "2026-03-20T06:23:26.849512+00:00"
+        },
+        "64": {
+            "id": 64,
+            "subcategory_id": 4,
+            "name": "Roblox War & Gameplay",
+            "competition_score": 0.7503,
+            "competition_level": "Low",
+            "top_keywords": [
+                "roblox",
+                "war",
+                "gameplay"
+            ],
+            "last_updated": "2026-03-20T06:23:32.202644+00:00"
+        },
+        "65": {
+            "id": 65,
+            "subcategory_id": 5,
+            "name": "Mobile Gaming Shorts & Horror",
+            "competition_score": 0.9535,
+            "competition_level": "Low",
+            "top_keywords": [
+                "youtubeshorts",
+                "fyp",
+                "ytshorts"
+            ],
+            "last_updated": "2026-03-20T06:23:37.489450+00:00"
+        },
+        "66": {
+            "id": 66,
+            "subcategory_id": 6,
+            "name": "GTA, Valorant, and Indian Driving Games",
+            "competition_score": 0.4619,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "gta",
+                "valorant",
+                "bike"
+            ],
+            "last_updated": "2026-03-20T06:23:42.320206+00:00"
+        },
+        "67": {
+            "id": 67,
+            "subcategory_id": 7,
+            "name": "Diverse Roblox & Meme-centric Gameplay",
+            "competition_score": 0.8356,
+            "competition_level": "Low",
+            "top_keywords": [
+                "roblox",
+                "meme",
+                "ep"
+            ],
+            "last_updated": "2026-03-20T06:23:47.500167+00:00"
+        },
+        "7": {
+            "subcategory_id": 1,
+            "name": "Relatable POV Skits & Social Media Memes",
+            "competition_score": 1.0,
+            "competition_level": "Low",
+            "top_keywords": [
+                "fyp",
+                "foryou",
+                "relatable"
+            ],
+            "last_updated": "2026-03-19T17:48:59.885652+00:00",
+            "id": 7
+        },
+        "8": {
+            "subcategory_id": 0,
+            "name": "Restaurant-Style Dinner Recipes",
+            "competition_score": 0.557,
+            "competition_level": "Medium",
+            "top_keywords": [
+                "oil",
+                "dinner",
+                "recipes"
+            ],
+            "last_updated": "2026-03-19T17:49:05.413243+00:00",
+            "id": 8
+        },
+        "9": {
+            "subcategory_id": 1,
+            "name": "Fun Foodie Shorts & Chicken Recipes",
+            "competition_score": 0.822,
+            "competition_level": "Low",
+            "top_keywords": [
+                "chicken",
+                "shortvideo",
+                "funny"
+            ],
+            "last_updated": "2026-03-19T17:49:10.847504+00:00",
+            "id": 9
+        }
+    }
+}

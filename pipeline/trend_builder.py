@@ -122,7 +122,7 @@ def get_trend_from_redis():
         print(f"Error reading from Redis: {e}")
         return default_data
 
-def save_trend_data(data, path="output/trend_data.json"):
+def save_trend_data(data, path="output/fallback/trend_data.json"):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)

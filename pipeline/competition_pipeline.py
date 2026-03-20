@@ -588,7 +588,7 @@ def run_pipeline(
 # 9. save_competition_data
 # ─────────────────────────────────────────────────────────────────────────────
 def save_competition_data(
-    path: str = "output/competition_data.json",
+    path: str = "output/fallback/competition_data.json",
 ) -> bool:
     """
     Read every ``competition:*`` key from Redis and write a single JSON file

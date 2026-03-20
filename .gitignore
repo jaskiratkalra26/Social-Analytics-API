@@ -17,9 +17,8 @@ venv.bak/
 .idea/
 
 # Project Specific - Generated files and folders
-output/
-!output/competition_data.json
-!output/trend_data.json
+output/*
+!output/fallback/
 temp_uploads/
 
 # Logs

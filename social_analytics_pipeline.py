@@ -246,7 +246,7 @@ def analyze_video(video_path: str) -> dict:
             # 2. FALLBACK JSON FETCH (Exactly by ID mapping)
             if not comp_data_found and subcat_id is not None:
                 try:
-                    json_path = os.path.join(Config.OUTPUT_DIR, "competition_data.json")
+                    json_path = os.path.join(Config.OUTPUT_DIR, "fallback", "competition_data.json")
                     if os.path.exists(json_path):
                         with open(json_path, 'r', encoding='utf-8') as f:
                             fallback_data = json.load(f)

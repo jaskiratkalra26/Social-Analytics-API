@@ -1,0 +1,38 @@
+{
+    "date": "2026-03-18",
+    "top_categories": [
+        {
+            "category": "Music",
+            "score": 0.367,
+            "keywords": [
+                "raushan rohi",
+                "rohi raushan",
+                "song raushan",
+                "rohi rangdari",
+                "raj song"
+            ]
+        },
+        {
+            "category": "Gaming",
+            "score": 0.327,
+            "keywords": [
+                "hindi minecraft",
+                "minecraft hindi",
+                "depie minecraft",
+                "minecraft carry",
+                "hindi gameplay"
+            ]
+        },
+        {
+            "category": "Movies & TV",
+            "score": 0.306,
+            "keywords": [
+                "spider man",
+                "official trailer",
+                "singh trailer",
+                "trailer spiderman",
+                "spiderman"
+            ]
+        }
+    ]
+}
