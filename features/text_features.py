@@ -42,6 +42,7 @@ def _do_ocr(args):
         res = reader.readtext(img_ocr) if reader else []
         return idx, res
     except Exception as e:
+        print(f"OCR Thread Exception: {e}")
         return idx, []
 
 def extract_text_features(frame_folder, verbose=False, frames=None):
@@ -126,7 +127,8 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
                 if diff < similarity_threshold:
                     frame_cache[idx]['should_run_ocr'] = False
             
-            prev_img_small = img_small
+            if frame_cache[idx]['should_run_ocr']:
+                prev_img_small = img_small
         except Exception:
             pass
 

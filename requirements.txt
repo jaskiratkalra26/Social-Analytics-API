@@ -20,3 +20,5 @@ redis
 python-dotenv
 keybert
 sentence-transformers
+google-api-python-client
+nltk
