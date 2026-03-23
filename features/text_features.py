@@ -144,7 +144,7 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
     # Phase 2: Concurrent OCR Inference
     ocr_results = {}
     if tasks_to_run:
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             futures = {executor.submit(_do_ocr, t): t for t in tasks_to_run}
             for future in as_completed(futures):
                 i_idx, res = future.result()
