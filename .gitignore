@@ -28,3 +28,5 @@ temp_uploads/
 *.mp4
 *.avi
 *.mov
+
+*.pem
