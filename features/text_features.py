@@ -36,7 +36,16 @@ def get_reader():
                 _reader = None
     return _reader
 
-# Helper function _do_ocr removed as concurrency was dropped for PyTorch safety.
+def _do_ocr(args):
+    """Helper function for ThreadPoolExecutor"""
+    idx, img_ocr, reader = args
+    try:
+        # reader.readtext releases the GIL, making it perfect for threads
+        res = reader.readtext(img_ocr) if reader else []
+        return idx, res
+    except Exception as e:
+        print(f"OCR Thread Exception: {e}")
+        return idx, []
 
 def extract_text_features(frame_folder, verbose=False, frames=None):
     """
@@ -133,24 +142,23 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
             pass
 
         if frame_cache[idx]['should_run_ocr']:
-            if img.shape[1] > 800:
-                scale_ocr = 800 / img.shape[1]
-                img_ocr = cv2.resize(img, (800, int(img.shape[0] * scale_ocr)))
+            if img.shape[1] > 480:
+                scale_ocr = 480 / img.shape[1]
+                img_ocr = cv2.resize(img, (480, int(img.shape[0] * scale_ocr)))
             else:
                 img_ocr = img
                 
             tasks_to_run.append((idx, img_ocr, reader))
 
-    # Phase 2: Sequential OCR Inference (Thread pool removed for PyTorch safety)
+    # Phase 2: Concurrent OCR Inference (Safe now that PyTorch instantiation is sequential)
     ocr_results = {}
-    for task in tasks_to_run:
-        idx, img_ocr, r = task
-        try:
-            res = r.readtext(img_ocr) if r else []
-        except Exception as e:
-            print(f"OCR Exception on frame {idx}: {e}")
-            res = []
-        ocr_results[idx] = res
+    if tasks_to_run:
+        max_threads = min(4, os.cpu_count() or 1)
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
+            futures = {executor.submit(_do_ocr, t): t for t in tasks_to_run}
+            for future in as_completed(futures):
+                i_idx, res = future.result()
+                ocr_results[i_idx] = res
 
     # Phase 3: Sequential processing of OCR results for temporal metrics
     frames_with_text_count = 0
