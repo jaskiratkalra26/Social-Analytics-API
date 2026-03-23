@@ -14,7 +14,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 try:
     import Config
 except ImportError:
-    pass # Config might not be available if used as standalone
+    Config = None # Config might not be available if used as standalone
+
+_CACHE_VERSION = "v2"
 
 # Global Singleton for Reader
 _reader = None
@@ -34,16 +36,7 @@ def get_reader():
                 _reader = None
     return _reader
 
-def _do_ocr(args):
-    """Helper function for ThreadPoolExecutor"""
-    idx, img_ocr, reader = args
-    try:
-        # reader.readtext releases the GIL, making it perfect for threads
-        res = reader.readtext(img_ocr) if reader else []
-        return idx, res
-    except Exception as e:
-        print(f"OCR Thread Exception: {e}")
-        return idx, []
+# Helper function _do_ocr removed as concurrency was dropped for PyTorch safety.
 
 def extract_text_features(frame_folder, verbose=False, frames=None):
     """
@@ -54,7 +47,11 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
         if os.path.exists(cache_path):
             try:
                 with open(cache_path, 'r') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    if data.get("_cache_version") == _CACHE_VERSION:
+                        return data
+                    else:
+                        print("Cache version mismatch, running OCR fresh.")
             except: pass
 
     frames_to_process = []
@@ -69,15 +66,18 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
             "context_clarity": 0.0, "hook_text_ratio": 0.0, "reading_speed": 0.0, "motion_score": 0.0
         }
 
-    target_fps = getattr(Config, 'TARGET_FPS', 1.0)
-    hook_duration_sec = getattr(Config, 'HOOK_DURATION', 3.0)
+    target_fps = getattr(Config, 'TARGET_FPS', 1.0) if Config else 1.0
+    hook_duration_sec = getattr(Config, 'HOOK_DURATION', 3.0) if Config else 3.0
     hook_frames_limit = max(1, int(hook_duration_sec * target_fps))
 
-    sample_rate = getattr(Config, 'OCR_SAMPLE_RATE', 3)
-    max_frames = getattr(Config, 'OCR_MAX_FRAMES', 60) # Max 60 frames to rescue massive videos
+    sample_rate = getattr(Config, 'OCR_SAMPLE_RATE', 3) if Config else 3
+    max_frames = getattr(Config, 'OCR_MAX_FRAMES', 60) if Config else 60 # Max 60 frames to rescue massive videos
 
     # 1. Guarantee EVERY frame of the actual hook is analyzed so we never miss instant hook text
     hook_indices = list(range(0, min(len(frames_to_process), hook_frames_limit)))
+    if not hook_indices and frames_to_process:
+        hook_indices = [0]
+
     
     # 2. Sparsely sample the rest of the video
     rest_indices = list(range(hook_frames_limit, len(frames_to_process), sample_rate))
@@ -98,7 +98,7 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
     print(f"Starting OCR on {num_sampled} frames using EasyOCR...")
 
     # Phase 1: Sequential Pre-pass to identify identical frames
-    similarity_threshold = getattr(Config, 'OCR_SIMILARITY_THRESHOLD', 0.01)
+    similarity_threshold = getattr(Config, 'OCR_SIMILARITY_THRESHOLD', 0.01) if Config else 0.01
     prev_img_small = None
     frame_cache = {}
     tasks_to_run = []
@@ -141,14 +141,16 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
                 
             tasks_to_run.append((idx, img_ocr, reader))
 
-    # Phase 2: Concurrent OCR Inference
+    # Phase 2: Sequential OCR Inference (Thread pool removed for PyTorch safety)
     ocr_results = {}
-    if tasks_to_run:
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            futures = {executor.submit(_do_ocr, t): t for t in tasks_to_run}
-            for future in as_completed(futures):
-                i_idx, res = future.result()
-                ocr_results[i_idx] = res
+    for task in tasks_to_run:
+        idx, img_ocr, r = task
+        try:
+            res = r.readtext(img_ocr) if r else []
+        except Exception as e:
+            print(f"OCR Exception on frame {idx}: {e}")
+            res = []
+        ocr_results[idx] = res
 
     # Phase 3: Sequential processing of OCR results for temporal metrics
     frames_with_text_count = 0
@@ -158,7 +160,7 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
     total_words_count = 0
     valid_words_count = 0
     hook_text_frames_count = 0
-    min_word_length = getattr(Config, 'OCR_MIN_WORD_LENGTH', 3)
+    min_word_length = getattr(Config, 'OCR_MIN_WORD_LENGTH', 3) if Config else 3
     
     reading_speeds = []
     prev_frame_words = set()
@@ -188,11 +190,12 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
             if prob < 0.4: continue
             clean_text = text.strip()
             if not clean_text: continue
+            if len(bbox) < 4: continue
             
             has_valid_text = True
             frame_char_count += len(clean_text)
             
-            (tl, tr, br, bl) = bbox
+            tl, tr, br, bl = bbox[0], bbox[1], bbox[2], bbox[3]
             # OPTIMISED MATH: direct absolute differences instead of np array instantiations
             box_w = abs(tr[0] - tl[0])
             box_h = abs(bl[1] - tl[1])
@@ -218,14 +221,18 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
         prev_frame_words = current_frame_words
 
     # Results Formulation
+    ideal_area = getattr(Config, 'OCR_FONT_IDEAL_AREA', 0.10) if Config else 0.10
+    avg_relative_area = (total_relative_box_area / total_text_boxes_count) if total_text_boxes_count > 0 else 0.0
+
     res = {
+        "_cache_version": _CACHE_VERSION,
         "text_presence_ratio": frames_with_text_count / num_sampled if num_sampled else 0,
         "text_density": total_characters_detected / num_sampled if num_sampled else 0,
-        "font_size_score": min(100, ((total_relative_box_area / total_text_boxes_count) / 0.10 * 100) if total_text_boxes_count else 0),
+        "font_size_score": min(100, (avg_relative_area / ideal_area * 100) if ideal_area > 0 else 0),
         "context_clarity": valid_words_count / total_words_count if total_words_count else 0,
         "hook_text_ratio": hook_text_frames_count / sum(1 for x in sampled_indices if x < hook_frames_limit) if any(x < hook_frames_limit for x in sampled_indices) else 0,
         "reading_speed": float(np.mean(reading_speeds)) if reading_speeds else 0.0,
-        "motion_score": 0.0 
+        "motion_score": 0.0  # Placeholder for future implementation. Currently never computed.
     }
 
     if frame_folder and os.path.exists(frame_folder):

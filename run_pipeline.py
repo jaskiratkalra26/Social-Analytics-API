@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from social_analytics_pipeline import analyze_video
 
-video_path = "sample_video (540p).mp4"
+video_path = "Video_for_OCR_Model_Testing.mp4"
 output_file = "output/social_analytics_results.json"
 
 if not os.path.exists("output"):

@@ -17,7 +17,7 @@ from pipeline.trend_builder import get_trend_from_redis
 from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation, viral_analysis, audio_analysis
 from analysis.storytelling_clarity import compute_storytelling_clarity
 from analysis.subcategory_classification import get_subcategory
-from features import popular_hashtags, visual_features, audio_features
+from features import popular_hashtags, visual_features, audio_features, text_features
 
 # Configure Logging
 logging.basicConfig(
@@ -143,6 +143,13 @@ def analyze_video(video_path: str) -> dict:
         except Exception as e:
              logger.error(f"Scene detection error: {e}")
 
+    # --- Preload Models Sequentially ---
+    # Prevents concurrent "device meta" initialization errors in PyTorch across threads.
+    logger.info("Preloading models sequentially...")
+    clip_analysis.get_model()
+    clip_analysis.get_embedder()
+    text_features.get_reader()
+    
     # --- STAGE 2: Analysis Modules (Parallel) ---
     logger.info("Starting analysis phase...")
     
