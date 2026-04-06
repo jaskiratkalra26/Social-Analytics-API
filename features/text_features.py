@@ -7,6 +7,7 @@ import json
 import easyocr
 import threading
 import torch
+import difflib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add project root to sys.path to import Config
@@ -177,6 +178,12 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
     
     prev_ocr_result = []
 
+    text_segments = []
+    current_segment = None
+    prev_text_set = set()
+
+    max_idx = max(sampled_indices) if sampled_indices else 0
+
     for idx in sampled_indices:
         if idx not in frame_cache:
             continue
@@ -193,11 +200,16 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
         has_valid_text = False
         frame_char_count = 0
         current_frame_words = set()
+        
+        current_frame_texts = []
 
         for (bbox, text, prob) in result:
             if prob < 0.4: continue
             clean_text = text.strip()
             if not clean_text: continue
+            
+            current_frame_texts.append(clean_text)
+            
             if len(bbox) < 4: continue
             
             has_valid_text = True
@@ -228,6 +240,47 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
             reading_speeds.append((new_words / safe_time_delta) * 60)
         prev_frame_words = current_frame_words
 
+        # Timeline and Segments Logic
+        def _text_similarity(s1, s2):
+            if not s1 and not s2: return 1.0
+            if not s1 or not s2: return 0.0
+            str1 = " ".join(sorted(list(s1)))
+            str2 = " ".join(sorted(list(s2)))
+            return difflib.SequenceMatcher(None, str1, str2).ratio()
+
+        time_sec = round(idx / target_fps, 2)
+        current_text_normalized = [t.lower() for t in current_frame_texts]
+        current_text_set = frozenset(current_text_normalized)
+        
+        is_similar = _text_similarity(current_text_set, prev_text_set) > 0.75
+        
+        if current_text_set and not is_similar:
+            if current_segment:
+                current_segment["end"] = time_sec
+                text_segments.append(current_segment)
+                
+            current_segment = {
+                "start": time_sec,
+                "end": time_sec,
+                "text": current_frame_texts
+            }
+        elif current_text_set and current_segment:
+            # Expand the segment end time, but keep original text to prevent flutter
+            current_segment["end"] = time_sec
+        elif not current_text_set:
+            if current_segment:
+                current_segment["end"] = time_sec
+                text_segments.append(current_segment)
+                current_segment = None
+                
+        # Only update prev set with new anchor text if it wasn't similar
+        if not is_similar:
+            prev_text_set = current_text_set
+
+    if current_segment:
+        current_segment["end"] = round((max_idx + 1) / target_fps, 2)
+        text_segments.append(current_segment)
+
     # Results Formulation
     ideal_area = getattr(Config, 'OCR_FONT_IDEAL_AREA', 0.10) if Config else 0.10
     avg_relative_area = (total_relative_box_area / total_text_boxes_count) if total_text_boxes_count > 0 else 0.0
@@ -240,7 +293,8 @@ def extract_text_features(frame_folder, verbose=False, frames=None):
         "context_clarity": valid_words_count / total_words_count if total_words_count else 0,
         "hook_text_ratio": hook_text_frames_count / sum(1 for x in sampled_indices if x < hook_frames_limit) if any(x < hook_frames_limit for x in sampled_indices) else 0,
         "reading_speed": float(np.mean(reading_speeds)) if reading_speeds else 0.0,
-        "motion_score": 0.0  # Placeholder for future implementation. Currently never computed.
+        "motion_score": 0.0,  # Placeholder for future implementation. Currently never computed.
+        "text_segments": text_segments
     }
 
     if frame_folder and os.path.exists(frame_folder):

@@ -17,6 +17,7 @@ from pipeline.trend_builder import get_trend_from_redis
 from analysis import hook_analysis, pacing_analysis, lighting_analysis, text_overlay_analysis, clip_analysis, platform_recommendation, subject_presentation, viral_analysis, audio_analysis
 from analysis.storytelling_clarity import compute_storytelling_clarity
 from analysis.subcategory_classification import get_subcategory
+from analysis.engagement_features import predict_video_performance
 from features import popular_hashtags, visual_features, audio_features, text_features
 
 # Configure Logging
@@ -57,7 +58,16 @@ def run_audio_analysis(audio_path):
         logger.error(f"Audio analysis error: {e}")
         return {"error": str(e)}
 
-def analyze_video(video_path: str) -> dict:
+def analyze_video(
+    video_path: str, 
+    text_embeddings: list = None,
+    upload_time=None,
+    avg_views_recent=None,
+    avg_likes_recent=None,
+    avg_comments_recent=None,
+    title_length=None,
+    num_tags=None
+) -> dict:
     """
     Runs the complete Social Analytics Pipeline on a video.
     Returns aggregated JSON results including:
@@ -158,7 +168,7 @@ def analyze_video(video_path: str) -> dict:
         future_pacing = executor.submit(pacing_analysis.analyze_pacing, video_path, frame_folder=frame_folder, frames=frames_list, scenes=scene_list)
         future_lighting = executor.submit(lighting_analysis.analyze_lighting, video_path, frame_folder=frame_folder, frames=frames_list)
         future_text = executor.submit(text_overlay_analysis.analyze_text_overlay, frame_folder, frames=frames_list)
-        future_clip = executor.submit(clip_analysis.analyze_content, video_path, frame_folder, frames=frames_list)
+        future_clip = executor.submit(clip_analysis.analyze_content, video_path, frame_folder, frames=frames_list, text_embeddings=text_embeddings)
         future_subject = executor.submit(run_subject_analysis, frame_folder, frames_list)
         future_audio = executor.submit(run_audio_analysis, audio_path)
         
@@ -279,8 +289,9 @@ def analyze_video(video_path: str) -> dict:
         results["subcategory"] = {"error": str(e)}
         results["competition_data"] = {}
     finally:
-        # Always strip embeddings — they're internal, not part of the output
-        results["content_classification"].pop("video_embeddings", None)
+        # Extract and expose clip embeddings at top level for downstream use
+        if "video_embeddings" in results["content_classification"]:
+            results["clip_embeddings"] = results["content_classification"].pop("video_embeddings")
 
     # --- Storytelling Clarity Analysis ---
     logger.info("Running Storytelling Clarity Analysis...")
@@ -453,6 +464,32 @@ def analyze_video(video_path: str) -> dict:
     except Exception as e:
         logger.error(f"Viral analysis error: {e}")
         results["viral_analysis"] = {"viral_score": 0, "error": str(e)}
+
+    # 6. Performance Predictions
+    if text_embeddings is not None and upload_time is not None:
+        logger.info("Running Performance Predictions...")
+        try:
+            prediction_inputs = {
+                "clip_embeddings": results.get("clip_embeddings", []),
+                "text_embeddings": text_embeddings,
+                "upload_time": upload_time,
+                "avg_views_recent": avg_views_recent or 0.0,
+                "avg_likes_recent": avg_likes_recent or 0.0,
+                "avg_comments_recent": avg_comments_recent or 0.0,
+                "title_length": title_length or 0,
+                "num_tags": num_tags or 0,
+                "category": results.get("subcategory", {}).get("id") or 0
+            }
+            
+            performance_predictions = predict_video_performance(**prediction_inputs)
+            results["performance_predictions"] = performance_predictions
+            logger.info("Performance predictions generated successfully.")
+        except Exception as e:
+            logger.error(f"Performance prediction error: {e}")
+            results["performance_predictions"] = {"error": str(e)}
+
+    # Remove clip embeddings from results to avoid cluttering JSON
+    results.pop("clip_embeddings", None)
 
     return results
 

@@ -39,6 +39,7 @@ ID_TO_LABEL = {v: k for k, v in LABEL_TO_ID.items()}
 
 # Global variables for caching model and embedder
 _model = None
+_text_model = None
 _embedder = None
 
 def get_model():
@@ -50,10 +51,24 @@ def get_model():
             try:
                 _model = joblib.load(model_path)
             except Exception as e:
-                logger.error(f"Failed to load model: {e}")
+                logger.error(f"Failed to load LightGBM model: {e}")
         else:
-            logger.warning(f"Model not found at {model_path}")
+            logger.warning(f"LightGBM model not found at {model_path}")
     return _model
+
+def get_text_model():
+    global _text_model
+    if _text_model is None:
+        model_path = os.path.join(Config.BASE_DIR, 'models', 'text_clip_classifier.joblib')
+        if os.path.exists(model_path):
+            logger.info(f"Loading Text+CLIP model from {model_path}")
+            try:
+                _text_model = joblib.load(model_path)
+            except Exception as e:
+                logger.error(f"Failed to load Text+CLIP model: {e}")
+        else:
+            logger.warning(f"Text+CLIP model not found at {model_path}")
+    return _text_model
 
 def get_embedder():
     global _embedder
@@ -72,12 +87,13 @@ def preload_models():
     """
     logger.info("Preloading models...")
     get_model()
+    get_text_model()
     get_embedder()
     logger.info("Models preloaded successfully.")
 
-def analyze_content(video_path: str, frame_folder: str, frames: list = None):
+def analyze_content(video_path: str, frame_folder: str, frames: list = None, text_embeddings: list = None):
     """
-    Analyzes video content using CLIP embeddings and LightGBM model.
+    Analyzes video content using CLIP embeddings and optionally text embeddings.
     Generates embedding from frames, normalizes it, and predicts class label.
     Results are cached in the frame folder.
     """
@@ -86,7 +102,8 @@ def analyze_content(video_path: str, frame_folder: str, frames: list = None):
     # Use distinct cache dir to survive frame cleanup
     cache_dir = os.path.join(Config.OUTPUT_DIR, "cache")
     os.makedirs(cache_dir, exist_ok=True)
-    cache_path = os.path.join(cache_dir, f"{video_name}_clip_analysis.json")
+    suffix = "_clip_text_analysis.json" if text_embeddings else "_clip_analysis.json"
+    cache_path = os.path.join(cache_dir, f"{video_name}{suffix}")
     
     if os.path.exists(cache_path):
         try:
@@ -175,8 +192,24 @@ def analyze_content(video_path: str, frame_folder: str, frames: list = None):
     # Ensure 2D for model
     feature_vector = avg_embedding.reshape(1, -1)
     
-    # Get Probability
-    probs = model.predict_proba(feature_vector)[0]
+    # 5. Predict using correct model based on available embeddings
+    if text_embeddings is not None:
+        text_model = get_text_model()
+        if text_model is not None:
+            logger.info("Using Text+CLIP model for category prediction.")
+            # Combine clip and text embeddings: [clip_embeddings, text_embeddings] required by text_clip_classifier
+            text_vec = np.array(text_embeddings).reshape(1, -1)
+            combined_vector = np.concatenate([feature_vector, text_vec], axis=1)
+            probs = text_model.predict_proba(combined_vector)[0]
+        else:
+            logger.warning("Text+CLIP model not loaded. Falling back to LightGBM model.")
+            logger.info("Using LightGBM model for category prediction.")
+            probs = model.predict_proba(feature_vector)[0]
+    else:
+        logger.info("Using LightGBM model for category prediction.")
+        # Get Probability with lightgbm model
+        probs = model.predict_proba(feature_vector)[0]
+        
     top_indices = np.argsort(probs)[::-1][:3]
     
     results = []
